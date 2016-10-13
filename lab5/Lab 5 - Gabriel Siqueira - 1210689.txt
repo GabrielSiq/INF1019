@@ -1,0 +1,155 @@
+Laboratorio 5­ Sistemas de Computação ­ INF1019 
+Gabriel da Silva Siqueira - 1210689 - 3WB
+
+1) Faça um programa para criar dois processos
+que se comunicam via pipe. O Pai lê do pipe
+enquanto o filho escreve no pipe. Exiba o resultado
+do que foi escrito e lido.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
+int main(int argc, char const *argv[])
+{
+	int fd[2];
+	const char mensagem[] = "Mensagem do filho pro pai";
+	char mensagemRecebida[sizeof mensagem];
+	
+	if(pipe(fd) <0){
+		puts("Problemas na abertura dos pipes!");
+		exit(-1);
+	}
+
+	if(fork() ==0){
+		close(fd[0]);
+		write(fd[1], mensagem, strlen(mensagem)+1);
+		printf("A mensagem escrita pelo filho eh: %s\n", mensagem);
+		close(fd[1]);
+	}
+	else{
+		close(fd[1]);
+		read(fd[0], mensagemRecebida, sizeof mensagemRecebida);
+		printf("A mensagem lida pelo pai eh: %s\n", mensagemRecebida);
+		close(fd[0]);
+	}
+	return 0;
+}
+
+Saídas:
+
+A mensagem lida pelo pai eh: Mensagem do filho pro pai
+A mensagem escrita pelo filho eh: Mensagem do filho pro pai
+
+Aprendizado: Aprendi a usar pipe para comunicar entre processos pai e filho. Não tinha certeza se podia fechar o pipe imediatamente após escrever/ler, mas parece que pode. O pai abre o pipe e cria o processo filho. O filho então escreve no pipe a mensagem definida. O pai lê e exibe.
+
+2) Faça um programa para redirecionar a entrada
+e a saída, lendo os dados de um arquivo e
+gerando a saída em outro.
+
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+int main(int argc, char const *argv[])
+{
+	int entrada, saida;
+	char mensagem[50];
+
+	// abre arquivos de entrada e saida
+	if((entrada = open("arquivo1.txt", O_RDONLY,0666)) == -1 )
+	{
+		perror("Erro ao abrir o primeiro arquivo!");
+		return -1;
+	}
+	if((saida = open("arquivo2.txt", O_RDWR,0666)) == -1 )
+	{
+		perror("Erro ao abrir o segundo arquivo!");
+		return -2;
+	}
+	
+	// redireciona a entrada
+	if((dup2(entrada, 0)) == -1)
+	{
+		perror("Erro ao duplicar fd[0]!");
+		return -3;
+	}
+
+	// redireciona a saida
+	if((dup2(saida, 1)) == -1)
+	{
+		perror("Erro ao duplicar fd[1]");
+		return -4;	
+	}
+
+	// Le do stdin, que agora redireciona pro arquivo1
+	scanf("%2000[^\n]", mensagem);
+
+	// Escreve no stdout, que agora redireciona pro arquivo2
+	printf("A mensagem lida da entrada é: %s", mensagem);
+
+	return 0;
+}
+
+Saída
+
+O arquivo1.txt contém a mensagem "Mensagem secreta!""
+Após a execução, o arquivo2.txt passa a conter "A mensagem lida da entrada é: Mensagem secreta!"
+
+Aprendizado: Aprendi a redirecionar a entrada e a saída usando dup2. Aprendi também que, diferentemente de fopen(), não posso abrir um arquivo que não existe com open().
+
+3) Faça um programa para criar um pipe e
+executar dois processos que são utilitários do Unix
+que se comuniquem através do pipe criado (a shell
+faz isso).
+
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdlib.h>
+
+int main(int argc, char const *argv[])
+{
+	int fd[2];
+	char dest[50];
+
+	if(pipe(fd) <0){
+		puts("Problemas na abertura dos pipes!");
+		exit(-1);
+	}
+
+	if(fork() == 0){
+		// filho
+
+		// Redireciona stdout para o pipe
+		close(fd[0]);
+		dup2(fd[1], 1);
+		// Echo escreve na stdout
+		execl("/bin/echo", "/bin/echo", "Documents", NULL);
+		close(fd[1]);
+	}
+	else{
+		// pai
+		close(fd[1]);
+		// Redireciona stdin para o pipe
+		dup2(fd[0], 0);
+		scanf("%s", dest);
+		// ls lê da stdin
+		execl("/bin/ls", "ls", dest, NULL);
+		close(fd[0]);
+	}
+	return 0;
+}
+
+Saída:
+
+Camera Samples	INF1019  install-tl-20160925  proposta
+
+(Conteúdos da minha pasta Documents)
+
+Aprendizado: O objetivo aqui foi juntar o exercício de pipe com o exercício de dup. 
+Escolhi dois utilitários simples: o ECHO, que escreve no stdout e o LS, que lê do stdin 
+e mostra os conteúdos do diretório em questão. Aqui, o filho direciona o stdout pro pipe 
+e escreve o nome do diretório que eu quero ler através da execução do echo. O pai direciona 
+o stdin pro pipe e executa o LS com o nome do diretório que foi passado por pipe. 

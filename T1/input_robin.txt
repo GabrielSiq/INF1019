@@ -1,0 +1,4 @@
+exec programa1
+exec programa2
+asdasdasdad programa3
+exec programa4

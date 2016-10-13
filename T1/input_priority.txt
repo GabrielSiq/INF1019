@@ -1,0 +1,6 @@
+exec program1 priority=4
+exec program2 priority=2
+exasdasdec program2 priority=4
+exec program4 priasdasdority=4
+exec program5 priority=9
+exec program6 priority=0

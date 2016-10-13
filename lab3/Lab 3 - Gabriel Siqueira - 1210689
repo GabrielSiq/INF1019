@@ -1,0 +1,246 @@
+Laboratorio 3 ­ Sistemas de Computação ­ INF1019 
+Gabriel da Silva Siqueira - 1210689 - 3WB
+
+1) Faça um programa que crie 2 processos filhos e alterne a execução dos filhos. Após
+10 trocas de contexto, o processo pai mata os filhos.
+OBS: Os filhos são formados por loops eternos.
+
+#include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+	int i, pid1, pid2;
+
+	pid1 = fork();
+	if(pid1 == 0) {
+		while(1) {
+			printf("Filho 1\n");
+			sleep(1);
+		}
+	}
+	else {
+		pid2 = fork();
+		if(pid2 == 0) {
+			while(1) {
+				printf("Filho 2\n");
+				sleep(1);
+			}				
+		}
+		else {
+			kill(pid2, SIGSTOP);
+			for(i=0;i<10;i++) {
+				if(i%2 == 0){
+					kill(pid2, SIGSTOP);
+					kill(pid1, SIGCONT);
+					sleep(1);
+				}
+				else{
+					kill(pid1, SIGSTOP);
+					kill(pid2, SIGCONT);
+					sleep(1);
+				}
+			}
+			kill(pid1, SIGKILL);
+			kill(pid2, SIGKILL);	
+			exit(1);
+			}
+		}
+	return 0;
+}
+
+Saída:
+
+Filho 1
+Filho 2
+Filho 1
+Filho 2
+Filho 1
+Filho 2
+Filho 1
+Filho 2
+Filho 1
+Filho 2
+
+Aprendizado: Foi bastante útil pra mim o uso da função sleep(), já que a impressao de Filho 1 e Filho 2 repetidamente tornava complicado o entendimento do que realmente estava acontecendo.
+São criados dois filhos no mesmo nível e alterna-se entre eles com SIGCONT e SIGSTOP. Esse exercício também me deu mais prática com o fork(), visto que no começo eu estava ainda um pouco atrapalhado
+na hora de diferenciar o código do pai e dos filhos.
+
+
+2) Faça um programa para monitorar e informar o preço de chamadas telefônicas. O
+programa deverá ser executado em background.
+O início e o término de uma chamada são informados através dos sinais SIGUSR1
+e SIGUSR2, respectivamente.
+O custo da ligação é de 2 centavos por segundo, para ligações de até 1 minuto e de
+1 centavo por segundo, a partir do 2º. minuto, ou seja, uma ligação de 1m30s custa
+R$1,50.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <time.h>
+#include <unistd.h>
+
+
+time_t start, end;
+
+
+int cost(int duration){
+	if(duration <= 60){
+		return duration*2;
+	}else{
+		// 60*2 + duration - 60 = duration + 60
+		return duration + 60;
+	}
+}
+
+void callStartHandler(int signal){
+	// Saves start time
+	start = time(NULL);
+}
+
+void callEndHandler(int signal){
+	// Saves end time
+	end = time(NULL);
+
+	// Calculates call duration
+	int duration = (int) end-start;
+
+	printf("This call lasted %d minutes and %d seconds.\n", duration/60, duration%60);
+	printf("It's gonna cost %d cents. What a bargain!\n", cost(duration));
+}
+
+void main(){
+	int pid;
+
+	signal(SIGUSR1, callStartHandler);
+	signal(SIGUSR2, callEndHandler);
+
+	for(;;);
+}
+
+Saída:
+
+This call lasted 0 minutes and 20 seconds.
+It's gonna cost 40 cents. What a bargain!
+
+Aprendizado: Nesse exercício aprendi melhor a interceptar e escrever um handler pra cada sinal. Também aprendi a usar a função time() da time.h que foi muito útil
+na hora de contar o tempo das ligações. Em retrospecto, seria legal se eu tivesse colocado também mensagens de início e término de ligação, embora não tenha sido pedido.
+
+
+
+
+3) Faça um programa para controlar os sinais de trânsito de uma via por computador.
+O programa deve controlar 4 sinais, o primeiro fica aberto por 30 segundos, em
+atenção por 5 segundos e fechado por 30 segundos. O segundo incrementa o tempo
+em 10 segundos para aberto, 5 para em atenção e 10 para fechado em relação ao
+primeiro sinal. E assim sucessivamente para o terceiro sinal em relação ao segundo
+e para o quarto em relação ao terceiro.
+Seu programa deve criar processos filho para controlar os sinais / gerar comandos
+para as mudanças de sinal, que devem ser indicadas na saída.
+
+#include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+	int i, pid1, pid2, pid3, pid4;
+	signal(SIGUSR1, sigHandler);
+	pid1 = fork();
+	if(pid1 != 0){
+		pid2 = fork();
+		if(pid2 != 0){
+			pid3 = fork();
+			if(pid3 != 0){
+				pid4 = fork();
+				if(pid4 !=0){
+					for(;;){
+					}
+				}else{
+					for(;;){
+						puts("Sinal 4 aberto!\n");
+						sleep(60);
+						puts("Sinal 4 atencao!\n");
+						sleep(20);
+						puts("Sinal 4 fechado!\n");
+						sleep(60);
+						fflush(stdout);
+					}
+				}
+			}
+			else{
+				for(;;){
+					puts("Sinal 3 aberto!\n");
+					sleep(50);
+					puts("Sinal 3 atencao!\n");
+					sleep(15);
+					puts("Sinal 3 fechado!\n");
+					sleep(60);
+					fflush(stdout);
+				}
+			}
+		}
+		else{
+			for(;;){
+				puts("Sinal 2 aberto!\n");
+				sleep(40);
+				puts("Sinal 2 atencao!\n");
+				sleep(10);
+				puts("Sinal 2 fechado!\n");
+				sleep(40);
+				fflush(stdout);
+			}
+		}
+	}
+	else{
+		for(;;){
+			puts("Sinal 1 aberto!\n");
+			sleep(30);
+			puts("Sinal 1 atencao!\n");
+			sleep(5);
+			puts("Sinal 1 fechado!\n");
+			sleep(30);
+			fflush(stdout);
+		}
+	}
+	return 0;
+}
+
+Saída: 
+
+Sinal 1 aberto!
+
+Sinal 2 aberto!
+
+Sinal 3 aberto!
+
+Sinal 4 aberto!
+
+Sinal 1 atencao!
+
+Sinal 1 fechado!
+
+Sinal 2 atencao!
+
+Sinal 2 fechado!
+
+Sinal 3 atencao!
+
+Sinal 4 atencao!
+
+Sinal 1 aberto!
+
+Sinal 3 fechado!
+
+Sinal 4 fechado!
+
+
+Aprendizado: Confesso que o enunciado dessa questão foi difícil de entender. O que acabei implementando foram 4 processos filhos no mesmo nível que são temporizados com sleep e avisam
+sobre cada mudança de estado do sinal de trânsito que representam. Comecei uma solução um pouco diferente, controlando cada processo por sinais através do processo pai, mas como não
+entendi muito bem se o controle e temporização seriam feitos no pai ou nos filhos, resolvi optar por essa solução.

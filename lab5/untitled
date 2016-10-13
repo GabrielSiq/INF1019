@@ -1,0 +1,36 @@
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main ()
+{
+	int fd[2];
+	pipe(fd);
+	char s1[50];
+	int retorno1;
+	char folder[50];
+
+	if(fork() == 0)
+	{	
+		/* Filho */
+		
+		char * const args[] = {"/bin/echo", "folder", NULL};
+		close(fd[1]);
+		/* fd[1] desnecessario */
+		execve("/bin/echo", args, NULL);
+	}
+	else
+	{
+		close(fd[0]);
+		/* fd[1] desnecessario */
+		if((retorno1 = dup2(fd[1], 0)) == -1)
+		{
+			perror("Error dup()");
+			return -2;
+		}
+		scanf("%s", folder);
+		execl("/bin/ls","ls",folder,NULL) ;
+	}
+}
