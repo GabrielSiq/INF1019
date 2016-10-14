@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "scheduler.h"
-#include "utils.h"
+#include "Scheduler.h"
+#include "Utils.h"
 
 #define PROGRAM_LIMIT 50// Suporta uma entrada de até 50 programas com sintaxe VÁLIDA
 #define CHAR_LIMIT 50

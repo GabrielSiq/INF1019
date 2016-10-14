@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "scheduler.h"
-#include "utils.h"
+#include "Scheduler.h"
+#include "Utils.h"
 
 
 #define PROGRAM_LIMIT 50// Suporta uma entrada de até 50 programas com sintaxe VÁLIDA
@@ -27,6 +27,7 @@ int integrityCheck(char * command, char * program){
 	if(!(stat(dir, &programCheck) == 0 && programCheck.st_mode & S_IXUSR)) {
 		return -4;
 	}
+	return 0;
 }
 
 int main(int argc, char const *argv[])

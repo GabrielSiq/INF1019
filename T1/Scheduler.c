@@ -1,13 +1,29 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
-#include "utils.h"
+#include "Utils.h"
 #include <string.h>
 
+int checkDone(NODE * List){
+	NODE * current = List;
+	while(current != NULL){
+		if(current->data.pstatus != FINISHED){
+			return 0;
+		}
+		current = current->next;
+	}
+	return 1;
+}
 
-void createProcesses(char ** newProgramsList, int programCount){
+NODE* createProcesses(char ** newProgramsList, int programCount){
 	int i, pid;
 	char cwd[1024];
+
+	// Cria lista de processos
+	NODE* head;
+    NODE* node;
+    DATA element;
+    init(&head);
 
 	for(i = 0; i < programCount; i++){
 		getcwd(cwd, 1024);
@@ -25,17 +41,39 @@ void createProcesses(char ** newProgramsList, int programCount){
 			printTime();
 			printf("Processo %s pid: %d criado e imediatamente interrompido.\n", newProgramsList[i], pid);
 			fflush(stdout);
-			//addProcess(processList, pid)
+			element.pid = pid;
+			element.pstatus = READY;
+			head = add(head, element);
 		}
 	}
+	return head;
 }
 
 int roundRobinScheduler(char ** newProgramsList, int programCount){
 	int i;
+	NODE * head;
 	printTime();
 	printf("Escalonador Round-Robin:\n");
-	createProcesses(newProgramsList, programCount);
-	while(1){
+
+	// Cria os processos que devem ser executados e retorna uma lista na ordem em que foram criados.
+	head = createProcesses(newProgramsList, programCount);
+	print_list(head);
+	printf("\n");
+	head = rotate(head);
+	print_list(head);
+	printf("\n");
+	head = rotate(head);
+	print_list(head);
+	printf("\n");
+	head = rotate(head);
+	print_list(head);
+	printf("\n");
+
+	printf("%d", checkDone(head));
+	print_list(head);
+	printf("\n");
+
+	while(true){
 		puts(".");
 		sleep(1);
 	}
