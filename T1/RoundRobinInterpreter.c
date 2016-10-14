@@ -4,33 +4,27 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <time.h>
+#include "scheduler.h"
+#include "utils.h"
 
 
 #define PROGRAM_LIMIT 50// Suporta uma entrada de até 50 programas com sintaxe VÁLIDA
 #define CHAR_LIMIT 50
 
-//TODO: PASSAR AS COISAS POR MEMÓRIA COMPARTILHADA
 //TODO: SINCRONIZAR ESCALONADOR E INTERPRETADOR POR SEMÁFORO OU SIGNAL
 
 //TODO: PASSAR AS FUNÇÕES AUXILIARES PARA UM UTIL.H
 
-void printTime(){
-	time_t rawtime;
-  	struct tm * timeinfo;
-
-  	time ( &rawtime );
-  	timeinfo = localtime ( &rawtime );
-  	printf ( "[%d:%d:%d] ", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
-}
-
 // Checa a integridade do comando de entrada
 int integrityCheck(char * command, char * program){
 	struct stat programCheck;
+	char dir[1024];
+	strcpy(dir, "bin/");
+	strcat(dir, program);
 	if(strcmp(command, "exec") != 0){
 		return -1;
 	}
-	if(!(stat(program, &programCheck) == 0 && programCheck.st_mode & S_IXUSR)) {
+	if(!(stat(dir, &programCheck) == 0 && programCheck.st_mode & S_IXUSR)) {
 		return -4;
 	}
 }
@@ -93,7 +87,7 @@ int main(int argc, char const *argv[])
 	if (programCount != 0){
 		printTime();
 		printf("Enviando programas ao escalonador round-robin..\n");
-		//roundRobinScheduler(newProgramsList, programCount);
+		roundRobinScheduler(newProgramsList, programCount);
 	}
 	else{
 		printTime();
