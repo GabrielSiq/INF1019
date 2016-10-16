@@ -8,60 +8,36 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
-NODE * programControl;
-NODE * IOProcess;
-int startIO = false;
-int endIO = false;
+Queue * ready;
+Queue * waiting;
+Queue * terminated;
+NODE * running;
 
-void printStatus(){
-	printTime();
-	printf("Lista de Prontos\n");
-	print_list(programControl, READY);
-	printf("Lista em Espera\n");
-	print_list(programControl, WAITING);
-	printf("Lista de Terminados\n");
-	print_list(programControl, FINISHED);
-}
+int move_wait = false;
+int resume = false;
 
-void IOFlag(int signal){
-	endIO = true;
-}
+// void printStatus(){
+// 	printTime();
+// 	printf("Lista de Prontos\n");
+// 	print_list(programControl, READY);
+// 	printf("Lista em Espera\n");
+// 	print_list(programControl, WAITING);
+// 	printf("Lista de Terminados\n");
+// 	print_list(programControl, FINISHED);
+// }
 
-void RRstartIO(){
-	if(startIO == false){
-		return;
-	}
-	IOProcess->data.pstatus = WAITING;
-	kill(IOProcess->data.pid, SIGSTOP);
-	printf("%s interrompido para I/O\n", IOProcess->data.name);
-	startIO = false;
-}
-
-void RRendIO(){
-	if(endIO == false){
-		return;
-	}
-	printf("Fim do I/O. %s será colocado no fim da lista de prontos.\n", IOProcess->data.name);
-	fflush(stdout);
-	IOProcess->data.pstatus = READY;
-	programControl = move_to_end(IOProcess, programControl);
-	endIO = false;
-}
-
-void checkIO(){
-	RRendIO();
-	RRstartIO();
+void endIO(int signal){
+	resume = true;
+	printf("Fim do I/O do processo %s.\n", waiting->head->data.name);
 }
 
 void RoundRobinIOHandler(int signal){
-	int pid, status;
-	NODE * currentNode;
-	currentNode = programControl;
+	int pid;
 	pid = fork();
-	// Processo pai volta para o que estava fazendo.
 	if(pid != 0){
-		startIO = true;
-		IOProcess = currentNode;
+		move_wait = true;
+		kill(running->data.pid, SIGSTOP);
+		printf("O processo %s iniciou o I/O.\n", running->data.name);
 	}
 	else{
 		sleep(IO_TIME);
@@ -70,18 +46,7 @@ void RoundRobinIOHandler(int signal){
 	}
 }
 
-int checkDone(NODE * List){
-	NODE * current = List;
-	while(current != NULL){
-		if(current->data.pstatus != FINISHED){
-			return 0;
-		}
-		current = current->next;
-	}
-	return 1;
-}
-
-NODE* createProcesses(char ** newProgramsList, int programCount){
+Queue * createProcesses(char ** newProgramsList, int programCount){
 	int i, pid;
 	char cwd[1024];
 
@@ -89,7 +54,8 @@ NODE* createProcesses(char ** newProgramsList, int programCount){
 	NODE* head;
     NODE* node;
     DATA element;
-    init(&head);
+
+    ready = ConstructQueue(50);
 
 	for(i = 0; i < programCount; i++){
 		getcwd(cwd, 1024);
@@ -110,56 +76,73 @@ NODE* createProcesses(char ** newProgramsList, int programCount){
 			element.pid = pid;
 			element.pstatus = READY;
 			strcpy(element.name, newProgramsList[i]);
-			head = add(head, element);
+			node = createNode(element);
+			Enqueue(ready, node);
+
 		}
 	}
-	return head;
 }
 
 void roundRobinScheduler(char ** newProgramsList, int programCount){
 	int i, finished, status;
 	NODE * current, * temp;
-	DATA * currentData;
 
 	signal(SIGINT, RoundRobinIOHandler);
-	signal(SIGUSR1, IOFlag);
+	signal(SIGUSR1, endIO);
 
 	printTime();
 	printf("Escalonador Round-Robin:\n");
 
 	// Cria os processos que devem ser executados e retorna uma lista na ordem em que foram criados.
-	programControl = createProcesses(newProgramsList, programCount);
+	createProcesses(newProgramsList, programCount);
+
+	waiting = ConstructQueue(50);
+	terminated = ConstructQueue(50);
+
+
 	while(true){
-		checkIO();
 		//printStatus();
 		// Checa se todos os programas já terminaram de executar
-		if(checkDone(programControl)){
+		//printf("ALOOO22\n");
+		if(isEmpty(ready) && isEmpty(waiting)){
 			printTime();
 			printf("Todos os programas foram executados com sucesso.\n");
 			return;
 		}
-		currentData = &(programControl->data);
-		// Checa se o processo corrente na lista está pronto
-		if(currentData->pstatus == READY){
-			// Continua a execução pela fatia de tempo alotada.
-			kill(currentData->pid, SIGCONT);
+		running = Dequeue(ready);
+		// Continua a execução pela fatia de tempo alotada.
+		if(running != NULL){
+			kill(running->data.pid, SIGCONT);
 			fflush(stdout);
-			currentData->pstatus = RUNNING;
 			sleep(TIME_SLICE);
+		}
 
-			// Checa se nesse tempo o programa já terminou
-			finished = waitpid(currentData->pid, &status, WNOHANG);
+		if(resume == true){
+			temp = Dequeue(waiting);
+			Enqueue(ready, temp);
+			resume = false;
+		}
+
+		// Checa se nesse tempo o programa já terminou
+		if(running != NULL){
+			finished = waitpid(running->data.pid, &status, WNOHANG);
 			if(finished == false){
-				kill(currentData->pid, SIGSTOP);
-				currentData->pstatus = READY;
+				kill(running->data.pid, SIGSTOP);
+				fflush(stdout);
+				if(move_wait == true){
+					Enqueue(waiting, running);
+					move_wait = false;
+				}
+				else{
+					Enqueue(ready, running);
+				}
 			}
 			else{
-				currentData->pstatus = FINISHED;
+				Enqueue(terminated, running);
 				printTime();
-				printf("O programa %s de PID: %d terminou a execução.\n", currentData->name, currentData->pid);
+				printf("O programa %s de PID: %d terminou a execução.\n", running->data.name, running->data.pid);
 			}
 		}
-		programControl=rotate(programControl);
 	}
 }
 

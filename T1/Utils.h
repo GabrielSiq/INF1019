@@ -12,14 +12,23 @@ typedef struct {
     char name[50];
 } DATA;
 
-typedef struct node {
+typedef struct Node_t {
     DATA data;
-    struct node* next;
+    struct Node_t *prev;
 } NODE;
 
-void print_list(NODE* head, int pstatus);
-void init(NODE** head);
-NODE * add(NODE* node, DATA data);
-NODE * delete_first(NODE * head);
-NODE * rotate(NODE *head);
-NODE * move_to_end(NODE * node, NODE * head);
+/* the HEAD of the Queue, hold the amount of node's that are in the queue*/
+typedef struct Queue {
+    NODE *head;
+    NODE *tail;
+    int size;
+    int limit;
+} Queue;
+
+Queue *ConstructQueue(int limit);
+void DestructQueue(Queue *queue);
+int Enqueue(Queue *pQueue, NODE *item);
+NODE *Dequeue(Queue *pQueue);
+int isEmpty(Queue* pQueue);
+void printQueue(Queue *queue);
+NODE * createNode(DATA data);
