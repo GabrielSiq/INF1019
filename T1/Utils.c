@@ -17,10 +17,14 @@ void init(NODE** head) {
     *head = NULL;
 }
 
-void print_list(NODE* head) {
+void print_list(NODE* head, int pstatus) {
     NODE * temp;
-    for (temp = head; temp; temp = temp->next)
-        printf("Process Id:%5d Status:%d", temp->data.pid, temp->data.pstatus);
+    for (temp = head; temp; temp = temp->next){
+        if(pstatus < 0 || temp->data.pstatus == pstatus){
+            printf("%s Status:%d ", temp->data.name, temp->data.pstatus);
+        }
+    }
+    printf("\n");
 }
 
 NODE* add(NODE* node, DATA data) {
@@ -112,9 +116,42 @@ NODE *free_list(NODE *head) {
 }
 
 NODE * rotate(NODE *head){
+    NODE * next, * current = head;
     if(head != NULL){
-        head = add(head, head->data);
-        head = delete_first(head);
+        while(current->next != NULL){
+            current = current->next;
+        }
+        current->next = head;
+        next = head->next;
+        head->next = NULL;
+        return next;
     }
+    return head;
+}
+
+NODE* move_to_end(NODE * node, NODE * head){
+    NODE * current, * current2, * next;
+    // Se o nó for vazio, a lista for vazia, ou o nó ja for o último da lista, não faça nada
+    if(node == NULL || head == NULL || node->next == NULL){
+        return head;
+    }
+    // Se estivermos movendo o primeiro nó da lista, rodamos a lista
+    if(head == node){
+        return rotate(head);
+    }
+    current = node;
+    // Faz o último item da lista apontar pra ele
+    while(current->next != NULL){
+        current = current->next;
+    }
+    current->next = node;
+
+    // Faz o anterior apontar pro próximo e ele apontar pra NULL
+    current = head;
+    while(current->next != node){
+        current = current->next;
+    }
+    current->next = node->next;
+    node->next = NULL;
     return head;
 }
