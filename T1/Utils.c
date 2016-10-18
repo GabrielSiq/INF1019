@@ -234,8 +234,13 @@ int isEmpty(Queue* pQueue) {
 
 void printQueue(Queue *queue){
     NODE * temp;
+    int i=0;
     for (temp = queue->head; temp; temp = temp->prev){
         printf("%s ", temp->data.name);
+        if(i > queue->size){
+            break;
+        }
+        i++;
     }
     printf("\n");
 }

@@ -15,20 +15,26 @@ NODE * running;
 
 int move_wait = false;
 int resume = false;
+int alarm_flag = false;
 
-// void printStatus(){
-// 	printTime();
-// 	printf("Lista de Prontos\n");
-// 	print_list(programControl, READY);
-// 	printf("Lista em Espera\n");
-// 	print_list(programControl, WAITING);
-// 	printf("Lista de Terminados\n");
-// 	print_list(programControl, FINISHED);
-// }
+void printStatus(){
+	printTime();
+	printf("Fila de Prontos: ");
+	printQueue(ready);
+	printTime();
+	printf("Fila de Espera: ");
+	printQueue(waiting);
+	printTime();
+	printf("Lista de Terminados: ");
+	printQueue(terminated);
+}
 
 void endIO(int signal){
 	resume = true;
+	printTime();
 	printf("Fim do I/O do processo %s.\n", waiting->head->data.name);
+	fflush(stdout);
+
 }
 
 void RoundRobinIOHandler(int signal){
@@ -37,6 +43,7 @@ void RoundRobinIOHandler(int signal){
 	if(pid != 0){
 		move_wait = true;
 		kill(running->data.pid, SIGSTOP);
+		printTime();
 		printf("O processo %s iniciou o I/O.\n", running->data.name);
 	}
 	else{
@@ -50,7 +57,6 @@ Queue * createProcesses(char ** newProgramsList, int programCount){
 	int i, pid;
 	char cwd[1024];
 
-	// Cria lista de processos
 	NODE* head;
     NODE* node;
     DATA element;
@@ -83,12 +89,23 @@ Queue * createProcesses(char ** newProgramsList, int programCount){
 	}
 }
 
+void timeSlice(int signal){
+	if(running != NULL){
+		kill(running->data.pid, SIGSTOP);
+		fflush(stdout);
+		Enqueue(ready, running);
+		running = NULL;
+		alarm_flag = false;
+	}
+}
+
 void roundRobinScheduler(char ** newProgramsList, int programCount){
-	int i, finished, status;
-	NODE * current, * temp;
+	int finished, status, i;
+	NODE * temp;
 
 	signal(SIGINT, RoundRobinIOHandler);
 	signal(SIGUSR1, endIO);
+	signal(SIGALRM, timeSlice);
 
 	printTime();
 	printf("Escalonador Round-Robin:\n");
@@ -103,18 +120,23 @@ void roundRobinScheduler(char ** newProgramsList, int programCount){
 	while(true){
 		//printStatus();
 		// Checa se todos os programas já terminaram de executar
-		//printf("ALOOO22\n");
-		if(isEmpty(ready) && isEmpty(waiting)){
+		if(isEmpty(ready) && isEmpty(waiting) && running == NULL){
 			printTime();
 			printf("Todos os programas foram executados com sucesso.\n");
 			return;
 		}
-		running = Dequeue(ready);
+		if(running == NULL && !isEmpty(ready))
+		{
+			running = Dequeue(ready);
+		}
 		// Continua a execução pela fatia de tempo alotada.
 		if(running != NULL){
 			kill(running->data.pid, SIGCONT);
 			fflush(stdout);
-			sleep(TIME_SLICE);
+			if(alarm_flag == false){
+				alarm(TIME_SLICE);
+				alarm_flag = true;
+			}
 		}
 
 		if(resume == true){
@@ -126,21 +148,19 @@ void roundRobinScheduler(char ** newProgramsList, int programCount){
 		// Checa se nesse tempo o programa já terminou
 		if(running != NULL){
 			finished = waitpid(running->data.pid, &status, WNOHANG);
-			if(finished == false){
-				kill(running->data.pid, SIGSTOP);
-				fflush(stdout);
-				if(move_wait == true){
-					Enqueue(waiting, running);
-					move_wait = false;
-				}
-				else{
-					Enqueue(ready, running);
-				}
-			}
-			else{
+			if(finished){
 				Enqueue(terminated, running);
 				printTime();
 				printf("O programa %s de PID: %d terminou a execução.\n", running->data.name, running->data.pid);
+				running = NULL;
+			}else{
+				if(move_wait == true){
+					kill(running->data.pid, SIGSTOP);
+					fflush(stdout);
+					Enqueue(waiting, running);
+					running = NULL;
+					move_wait = false;
+				}
 			}
 		}
 	}
