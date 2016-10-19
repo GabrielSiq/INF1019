@@ -4,21 +4,24 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "Scheduler.h"
 #include "Utils.h"
+#include <sys/shm.h>
+#include <sys/wait.h>
 
-#define PROGRAM_LIMIT 50// Suporta uma entrada de até 50 programas com sintaxe VÁLIDA
-#define CHAR_LIMIT 50
 
-//TODO: SINCRONIZAR ESCALONADOR E INTERPRETADOR POR SEMÁFORO OU SIGNAL
+//TODO: COMENTAR E ARRUMAR DIREITO ESSE CÓDIGO
 
 //TODO: PASSAR AS FUNÇÕES AUXILIARES PARA UM UTIL.H
+
 
 // Checa a integridade do comando de entrada
 int integrityCheck(char * command, char * program, char * priority){
 	char priorityIntegrity[9];
 	int priorityValue;
 	struct stat programCheck;
+	char dir[1024];
+	strcpy(dir, "bin/");
+	strcat(dir, program);
 
 	strncpy(priorityIntegrity, priority, 9);
 	priorityIntegrity[9] = 0;
@@ -32,7 +35,7 @@ int integrityCheck(char * command, char * program, char * priority){
 	if(priorityValue > 7 || priorityValue < 0){
 		return -3;
 	}
-	if(!(stat(program, &programCheck) == 0 && programCheck.st_mode & S_IXUSR)) {
+	if(!(stat(dir, &programCheck) == 0 && programCheck.st_mode & S_IXUSR)) {
 		return -4;
 	}
 	return priorityValue;
@@ -41,12 +44,30 @@ int integrityCheck(char * command, char * program, char * priority){
 int main(int argc, char const *argv[])
 {
 	char command[CHAR_LIMIT], program[CHAR_LIMIT], priority[CHAR_LIMIT], priorityIntegrity[9];
-	char * newProgramsList[PROGRAM_LIMIT];
-	int programCount=0, i, priorityList[PROGRAM_LIMIT], priorityValue;
+	char * newProgramsList[PROGRAM_LIMIT], cwd[1024], ascii[10]={0}, * mem;
+	int programCount=0, i, j, priorityList[PROGRAM_LIMIT], priorityValue, status, seg, pd[2], seg3, add=6666, fd[2], pid, *mem2;
 	FILE *input, *output;
 
 	printTime();
 	printf("Interpretador de Prioridade:\n");
+
+	if ((seg=shmget(5220,PROGRAM_LIMIT * sizeof(int),0600|IPC_CREAT))<0){
+	    perror("shmget error");
+	    exit(-1);
+	}
+	if((mem2=(int*)shmat(seg,0,0))==(int*)-1){
+	    perror("shmat error");
+	    exit(-1);
+	}
+	if ((seg=shmget(5775,PROGRAM_LIMIT * CHAR_LIMIT*sizeof(char),0600|IPC_CREAT))<0){
+	    perror("shmget error");
+	    exit(-1);
+	}
+	if((mem=(char*)shmat(seg,0,0))==(char*)-1){
+	    perror("shmat error");
+	    exit(-1);
+	}
+
 	// A entrada e a saída serão feitas por arquivo,
 	// de modo a facilitar a avaliação e teste.
 	input = fopen("input_priority.txt", "r");
@@ -55,16 +76,8 @@ int main(int argc, char const *argv[])
 		printf("Erro na abertura do arquivo de entrada.\n");
 		exit(1);
 	}
-	output = fopen("output_priority.txt", "w");
-	if(output == NULL){
-		printTime();
-		printf("Erro na abertura do arquivo de saída.\n");
-		exit(1);
-	}
-	// Desviando o stdout. Caso prefira STDOUT, comente esta linha.
-	//dup2(fileno(output), STDOUT_FILENO);
 
-	// Aloca espaço no vetor de programas
+	//Aloca espaço no vetor de programas
 	for(i = 0; i < PROGRAM_LIMIT; i++){
 		newProgramsList[i] = (char *) malloc(CHAR_LIMIT * sizeof(char));
 	}
@@ -101,18 +114,33 @@ int main(int argc, char const *argv[])
 		i++;
 	}
 	fclose(input);
-	for(i=0;i<programCount;i++){
-		printf("%s %d\n", newProgramsList[i], priorityList[i]);
+
+	for(i =0; i< programCount; i++){
+		for(j=0; j < strlen(newProgramsList[i])+1;j++){
+			mem[i * CHAR_LIMIT + j] = newProgramsList[i][j];
+		}
 	}
+	for(i =0; i< programCount; i++){
+		mem2[i] = priorityList[i];
+	}
+
 	if (programCount != 0){
 		printTime();
-		printf("Enviando programas ao escalonador round-robin..\n");
-		priorityScheduler(newProgramsList, priorityList, programCount);
+		printf("Enviando programas ao Escalonador de Prioridade..\n");
+		sprintf(ascii, "%d", programCount);
+		getcwd(cwd, 1024);
+		strcat(cwd, "/scheduler");
+		pid = fork();
+		if(pid == 0){
+			execl(cwd, "scheduler", ascii, "priority", NULL);
+			exit(0);
+		}else{
+			waitpid(pid, &status, 0);
+		}
 	}
 	else{
 		printTime();
 		printf("Nenhuma entrada válida foi detecatada. O escalonador não será acionado.\n");
 	}
-	fclose(output); 
 	return 0;
 }

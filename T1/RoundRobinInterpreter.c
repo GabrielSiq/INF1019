@@ -4,12 +4,9 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "Scheduler.h"
 #include "Utils.h"
-
-
-#define PROGRAM_LIMIT 50// Suporta uma entrada de até 50 programas com sintaxe VÁLIDA
-#define CHAR_LIMIT 50
+#include <sys/shm.h>
+#include <sys/wait.h>
 
 //TODO: COMENTAR E ARRUMAR DIREITO ESSE CÓDIGO
 
@@ -32,13 +29,24 @@ int integrityCheck(char * command, char * program){
 
 int main(int argc, char const *argv[])
 {
-	char command[CHAR_LIMIT], program[CHAR_LIMIT];
-	char * newProgramsList[PROGRAM_LIMIT];
-	int programCount=0, integrityValue, i;
+	char command[CHAR_LIMIT], program[CHAR_LIMIT], arg[10]={0};
+	char * newProgramsList[PROGRAM_LIMIT], * mem, cwd[1024];
+	int programCount=0, integrityValue, i, seg, j, pid, status;
 	FILE *input, *output;
 
 	printTime();
 	printf("Interpretador Round-Robin:\n");
+
+
+	if ((seg=shmget(5775,PROGRAM_LIMIT * CHAR_LIMIT*sizeof(char),0600|IPC_CREAT))<0){
+	    perror("shmget error");
+	    exit(-1);
+	}
+	if((mem=(char*)shmat(seg,0,0))==(char*)-1){
+	    perror("shmat error");
+	    exit(-1);
+	}
+
 	// A entrada e a saída serão feitas por arquivo,
 	// de modo a facilitar a avaliação e teste.
 	input = fopen("input_robin.txt", "r");
@@ -47,14 +55,6 @@ int main(int argc, char const *argv[])
 		printf("Erro na abertura do arquivo de entrada.\n");
 		exit(1);
 	}
-	output = fopen("output_robin.txt", "w");
-	if(output == NULL){
-		printTime();
-		printf("Erro na abertura do arquivo de saída.\n");
-		exit(1);
-	}
-	// Desviando o stdout. Caso prefira STDOUT, comente esta linha.
-	//dup2(fileno(output), STDOUT_FILENO);
 
 	// Aloca espaço no vetor de programas
 	for(i = 0; i < PROGRAM_LIMIT; i++){
@@ -81,19 +81,29 @@ int main(int argc, char const *argv[])
 		i++;
 	}
 
-	for(i=0;i<programCount;i++){
-		printf("%s\n", newProgramsList[i]);
+	for(i =0; i< programCount; i++){
+		for(j=0; j < strlen(newProgramsList[i])+1;j++){
+			mem[i * CHAR_LIMIT + j] = newProgramsList[i][j];
+		}
 	}
+
 	fclose(input);
 	if (programCount != 0){
 		printTime();
 		printf("Enviando programas ao escalonador round-robin..\n");
-		roundRobinScheduler(newProgramsList, programCount);
+		sprintf(arg, "%d", programCount);
+		getcwd(cwd, 1024);
+		strcat(cwd, "/scheduler");
+		pid = fork();
+		if(pid == 0){
+			execl(cwd, "scheduler", arg, NULL);
+		}else{
+			waitpid(pid, &status, 0);
+		}
 	}
 	else{
 		printTime();
 		printf("Nenhuma entrada válida foi detecatada. O escalonador não será acionado.\n");
 	}
-	fclose(output); 
 	return 0;
 }

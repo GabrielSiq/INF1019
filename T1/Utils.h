@@ -1,13 +1,15 @@
 #define true 1
 #define false 0
+#define PROGRAM_LIMIT 50// Suporta uma entrada de até 50 programas com sintaxe VÁLIDA
+#define CHAR_LIMIT 50
+#define TIME_SLICE 2
+#define IO_TIME 5
 
 void printTime();
 
-typedef enum {READY, RUNNING, WAITING, FINISHED} status;
 
 typedef struct {
     int pid;
-    status pstatus;
     int priority;
     char name[50];
 } DATA;
@@ -32,3 +34,4 @@ NODE *Dequeue(Queue *pQueue);
 int isEmpty(Queue* pQueue);
 void printQueue(Queue *queue);
 NODE * createNode(DATA data);
+int OrderEnqueue(Queue *pQueue, NODE *item);

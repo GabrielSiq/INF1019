@@ -236,7 +236,7 @@ void printQueue(Queue *queue){
     NODE * temp;
     int i=0;
     for (temp = queue->head; temp; temp = temp->prev){
-        printf("%s ", temp->data.name);
+        printf("%s %d ", temp->data.name, temp->data.priority);
         if(i > queue->size){
             break;
         }
@@ -253,4 +253,47 @@ NODE * createNode(DATA data){
     temp->data = data;
     temp->prev = NULL;
     return temp;
+}
+
+int OrderEnqueue(Queue *pQueue, NODE *item) {
+    NODE * temp;
+    /* Bad parameter */
+    if ((pQueue == NULL) || (item == NULL)) {
+        return false;
+    }
+    // if(pQueue->limit != 0)
+    if (pQueue->size >= pQueue->limit) {
+        return false;
+    }
+    /*the queue is empty*/
+    item->prev = NULL;
+    if (pQueue->size == 0) {
+        pQueue->head = item;
+        pQueue->tail = item;
+        pQueue->size = 1;
+    } else {
+        if(pQueue->tail->data.priority <= item->data.priority){
+            Enqueue(pQueue, item);
+            return true;
+        }else{
+            if(pQueue->size == 1){
+                Enqueue(pQueue, item);
+                temp = Dequeue(pQueue);
+                Enqueue(pQueue, temp);
+                return true;
+            }
+        }
+        while(pQueue->head->data.priority <= item->data.priority){
+            temp = Dequeue(pQueue);
+            Enqueue(pQueue, temp);
+        }
+        Enqueue(pQueue, item);
+        while(pQueue->head->data.priority <= pQueue->head->prev->data.priority){
+            temp = Dequeue(pQueue);
+            Enqueue(pQueue, temp);
+        }
+        temp = Dequeue(pQueue);
+        Enqueue(pQueue, temp);
+        return true;
+    }
 }
