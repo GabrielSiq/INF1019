@@ -8,12 +8,6 @@
 #include <sys/shm.h>
 #include <sys/wait.h>
 
-
-//TODO: COMENTAR E ARRUMAR DIREITO ESSE CÓDIGO
-
-//TODO: PASSAR AS FUNÇÕES AUXILIARES PARA UM UTIL.H
-
-
 // Checa a integridade do comando de entrada
 int integrityCheck(char * command, char * program, char * priority){
 	char priorityIntegrity[9];
@@ -32,7 +26,7 @@ int integrityCheck(char * command, char * program, char * priority){
 		return -2;
 	}
 	priorityValue = (int) priority[9] - '0';
-	if(priorityValue > 7 || priorityValue < 0){
+	if(priorityValue > 7 || priorityValue < 1){
 		return -3;
 	}
 	if(!(stat(dir, &programCheck) == 0 && programCheck.st_mode & S_IXUSR)) {
@@ -45,11 +39,8 @@ int main(int argc, char const *argv[])
 {
 	char command[CHAR_LIMIT], program[CHAR_LIMIT], priority[CHAR_LIMIT], priorityIntegrity[9];
 	char * newProgramsList[PROGRAM_LIMIT], cwd[1024], ascii[10]={0}, * mem;
-	int programCount=0, i, j, priorityList[PROGRAM_LIMIT], priorityValue, status, seg, pd[2], seg3, add=6666, fd[2], pid, *mem2;
-	FILE *input, *output;
-
-	printTime();
-	printf("Interpretador de Prioridade:\n");
+	int programCount=0, i, j, priorityList[PROGRAM_LIMIT], priorityValue, status, seg, pid, *mem2;
+	FILE *input;
 
 	if ((seg=shmget(5220,PROGRAM_LIMIT * sizeof(int),0600|IPC_CREAT))<0){
 	    perror("shmget error");
@@ -77,6 +68,9 @@ int main(int argc, char const *argv[])
 		exit(1);
 	}
 
+	printTime();
+	printf("Interpretador de Prioridade:\n");
+
 	//Aloca espaço no vetor de programas
 	for(i = 0; i < PROGRAM_LIMIT; i++){
 		newProgramsList[i] = (char *) malloc(CHAR_LIMIT * sizeof(char));
@@ -98,7 +92,7 @@ int main(int argc, char const *argv[])
 		}
 		else if(priorityValue == -3){
 			printTime();
-			printf("O valor recebido na linha %d não é um valor de prioridade válido (de 0 a 7).\n", i);
+			printf("O valor recebido na linha %d não é um valor de prioridade válido (de 1 a 7).\n", i);
 		}
 		else if(priorityValue == -4){
 			printTime();
@@ -127,6 +121,7 @@ int main(int argc, char const *argv[])
 	if (programCount != 0){
 		printTime();
 		printf("Enviando programas ao Escalonador de Prioridade..\n");
+		fflush(stdout);
 		sprintf(ascii, "%d", programCount);
 		getcwd(cwd, 1024);
 		strcat(cwd, "/scheduler");
@@ -142,5 +137,7 @@ int main(int argc, char const *argv[])
 		printTime();
 		printf("Nenhuma entrada válida foi detecatada. O escalonador não será acionado.\n");
 	}
+	shmdt(mem);
+	shmdt(mem2);
 	return 0;
 }

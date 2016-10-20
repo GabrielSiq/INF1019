@@ -8,10 +8,6 @@
 #include <sys/shm.h>
 #include <sys/wait.h>
 
-//TODO: COMENTAR E ARRUMAR DIREITO ESSE CÓDIGO
-
-//TODO: PASSAR AS FUNÇÕES AUXILIARES PARA UM UTIL.H
-
 // Checa a integridade do comando de entrada
 int integrityCheck(char * command, char * program){
 	struct stat programCheck;
@@ -34,11 +30,7 @@ int main(int argc, char const *argv[])
 	int programCount=0, integrityValue, i, seg, j, pid, status;
 	FILE *input, *output;
 
-	printTime();
-	printf("Interpretador Round-Robin:\n");
-
-
-	if ((seg=shmget(5775,PROGRAM_LIMIT * CHAR_LIMIT*sizeof(char),0600|IPC_CREAT))<0){
+	if((seg=shmget(5775,PROGRAM_LIMIT * CHAR_LIMIT*sizeof(char),0600|IPC_CREAT))<0){
 	    perror("shmget error");
 	    exit(-1);
 	}
@@ -55,6 +47,9 @@ int main(int argc, char const *argv[])
 		printf("Erro na abertura do arquivo de entrada.\n");
 		exit(1);
 	}
+
+	printTime();
+	printf("Interpretador Round-Robin:\n");
 
 	// Aloca espaço no vetor de programas
 	for(i = 0; i < PROGRAM_LIMIT; i++){
@@ -91,6 +86,7 @@ int main(int argc, char const *argv[])
 	if (programCount != 0){
 		printTime();
 		printf("Enviando programas ao escalonador round-robin..\n");
+		fflush(stdout);
 		sprintf(arg, "%d", programCount);
 		getcwd(cwd, 1024);
 		strcat(cwd, "/scheduler");
@@ -105,5 +101,6 @@ int main(int argc, char const *argv[])
 		printTime();
 		printf("Nenhuma entrada válida foi detecatada. O escalonador não será acionado.\n");
 	}
+	shmdt(mem);
 	return 0;
 }

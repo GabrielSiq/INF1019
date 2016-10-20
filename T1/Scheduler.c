@@ -19,6 +19,7 @@ int resume = false;
 int alarm_flag = false;
 int priority = false;
 
+/* Imprime o status de todas as filas */
 void printStatus(){
 	printTime();
 	printf("Fila de Prontos: ");
@@ -31,6 +32,7 @@ void printStatus(){
 	printQueue(terminated);
 }
 
+/* Handler para o sinal de término de I/O */
 void endIO(int signal){
 	resume = true;
 	printTime();
@@ -38,7 +40,8 @@ void endIO(int signal){
 	fflush(stdout);
 }
 
-void RoundRobinIOHandler(int signal){
+/* Handler para o sinal de início de I/O */
+void IOHandler(int signal){
 	int pid;
 	pid = fork();
 	if(pid != 0){
@@ -54,6 +57,7 @@ void RoundRobinIOHandler(int signal){
 	}
 }
 
+/* Cria os novos processos e os coloca na fila de prontos */
 void createProcesses(char ** newProgramsList, int programCount, int * priorityList){
 	int i, pid;
 	char cwd[1024];
@@ -91,6 +95,8 @@ void createProcesses(char ** newProgramsList, int programCount, int * priorityLi
 	}
 }
 
+/* Handler para o alarme de fatia de tempo esgotada. Serve tanto para RoundRobin
+quanto para ajuste dinâmico de prioridade */
 void timeSlice(int signal){
 	if(running != NULL){
 		kill(running->data.pid, SIGSTOP);
@@ -112,18 +118,19 @@ void timeSlice(int signal){
 	}
 }
 
+/* Escalonador RoundRobin */
 void roundRobinScheduler(char ** newProgramsList, int programCount){
 	int finished, status, i;
 	NODE * temp;
 
-	signal(SIGILL, RoundRobinIOHandler);
+	signal(SIGILL, IOHandler);
 	signal(SIGUSR1, endIO);
 	signal(SIGALRM, timeSlice);
 
 	printTime();
 	printf("Escalonador Round-Robin:\n");
 
-	// Cria os processos que devem ser executados e retorna uma lista na ordem em que foram criados.
+	// Cria os processos que devem ser executados.
 	createProcesses(newProgramsList, programCount, NULL);
 
 	waiting = ConstructQueue(50);
@@ -136,8 +143,12 @@ void roundRobinScheduler(char ** newProgramsList, int programCount){
 			printTime();
 			printf("Todos os programas foram executados com sucesso.\n");
 			printStatus();
+			DestructQueue(ready);
+			DestructQueue(terminated);
+			DestructQueue(waiting);
 			return;
 		}
+		// Escalona processo e dispara contagem de tempo
 		else if(running == NULL && !isEmpty(ready))
 		{
 			running = Dequeue(ready);
@@ -149,15 +160,15 @@ void roundRobinScheduler(char ** newProgramsList, int programCount){
 				alarm_flag = true;
 			}
 		}
-
+		// Tira processo da fila de espera e coloca em prontos.
 		if(resume == true){
 			temp = Dequeue(waiting);
 			Enqueue(ready, temp);
 			resume = false;
 		}
-
-		// Checa se nesse tempo o programa já terminou
+		
 		if(running != NULL){
+			// Checa se nesse tempo o programa já terminou
 			finished = waitpid(running->data.pid, &status, WNOHANG);
 			if(finished){
 				Enqueue(terminated, running);
@@ -165,6 +176,7 @@ void roundRobinScheduler(char ** newProgramsList, int programCount){
 				printf("O programa %s terminou a execução.\n", running->data.name);
 				running = NULL;
 			}else{
+				// Move processo em I/O para espera
 				if(move_wait == true){
 					kill(running->data.pid, SIGSTOP);
 					fflush(stdout);
@@ -177,11 +189,12 @@ void roundRobinScheduler(char ** newProgramsList, int programCount){
 	}
 }
 
+/* Escalonador de Prioridade */
 void priorityScheduler(char ** newProgramsList, int * priorityList, int programCount){
 	int finished, status, i;
 	NODE * temp;
 
-	signal(SIGILL, RoundRobinIOHandler);
+	signal(SIGILL, IOHandler);
 	signal(SIGUSR1, endIO);
 	signal(SIGALRM, timeSlice);
 
@@ -190,7 +203,7 @@ void priorityScheduler(char ** newProgramsList, int * priorityList, int programC
 	printTime();
 	printf("Escalonador de Prioridade:\n");
 
-	// Cria os processos que devem ser executados e retorna uma lista na ordem em que foram criados.
+	// Cria os processos que devem ser executados.
 	createProcesses(newProgramsList, programCount, priorityList);
 
 	waiting = ConstructQueue(50);
@@ -203,15 +216,19 @@ void priorityScheduler(char ** newProgramsList, int * priorityList, int programC
 			printTime();
 			printf("Todos os programas foram executados com sucesso.\n");
 			printStatus();
+			DestructQueue(ready);
+			DestructQueue(terminated);
+			DestructQueue(waiting);
 			return;
 		}
+		// Escalona processo.
 		else if(running == NULL && !isEmpty(ready)){
 			running = Dequeue(ready);
 			kill(running->data.pid, SIGCONT);
 			printTime();
 			printf("O processo %s de prioridade %d foi escalonado e está rodando.\n", running->data.name, running->data.priority);
 		}
-		// Continua a execução pela fatia de tempo alotada.
+		// Interrompe processo por prioridade.
 		else if(running != NULL && !isEmpty(ready)){
 			if(ready->head->data.priority < running->data.priority){
 				kill(running->data.pid, SIGSTOP);
@@ -220,12 +237,13 @@ void priorityScheduler(char ** newProgramsList, int * priorityList, int programC
 				printf("O processo %s de prioridade %d foi interrompido por prioridade.\n", running->data.name, running->data.priority);
 				running = NULL;
 			}
+			// Conta tempo para proxima queda de prioridade
 			else if(alarm_flag == false){
 				alarm(TIME_SLICE);
 				alarm_flag = true;
 			}
 		}
-
+		// Devolve à fila de prontos quando acaba I/O
 		if(resume == true){
 			temp = Dequeue(waiting);
 			OrderEnqueue(ready, temp);
@@ -241,6 +259,7 @@ void priorityScheduler(char ** newProgramsList, int * priorityList, int programC
 				printf("O programa %s terminou a execução.\n", running->data.name);
 				running = NULL;
 			}else{
+				// Move para espera quando começa o I/O.
 				if(move_wait == true){
 					kill(running->data.pid, SIGSTOP);
 					fflush(stdout);
@@ -293,9 +312,11 @@ int main(int argc, char const *argv[])
 			priorityList[i] = mem2[i];
 		}
 		priorityScheduler(newProgramsList, priorityList, max);
+		shmdt(mem2);
 	}
 	else{
 		roundRobinScheduler(newProgramsList, max);
+		shmdt(mem);
 	}
 	return 0;
 }
