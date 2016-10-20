@@ -1,0 +1,70 @@
+[22:6:8] Interpretador de Prioridade:
+[22:6:8] O programa programa1 teve sintaxe válida e entrará na lista de novos programas com prioridade 7.
+[22:6:8] O programa programa2 teve sintaxe válida e entrará na lista de novos programas com prioridade 2.
+[22:6:8] O comando exasdasdec na linha 2 não é reconhecido como um comando válido. A linha será ignorada.
+[22:6:8] O argumento priasdasdority=4 na linha 3 não é reconhecido como um argumento de prioridade válido. A linha será ignorada.
+[22:6:8] O valor recebido na linha 4 não é um valor de prioridade válido (de 0 a 7).
+[22:6:8] O programa programa3 teve sintaxe válida e entrará na lista de novos programas com prioridade 3.
+[22:6:8] O programa programa4 teve sintaxe válida e entrará na lista de novos programas com prioridade 2.
+[22:6:8] Enviando programas ao Escalonador de Prioridade..
+[22:6:8] Escalonador de Prioridade:
+[22:6:8] Processo programa1 entrou na fila de prontos.
+[22:6:8] Processo programa2 entrou na fila de prontos.
+[22:6:8] Processo programa3 entrou na fila de prontos.
+[22:6:8] Processo programa4 entrou na fila de prontos.
+[22:6:8] O processo programa2 de prioridade 2 foi escalonado e está rodando.
+[22:6:9] O programa programa2 terminou a execução.
+[22:6:9] O processo programa4 de prioridade 2 foi escalonado e está rodando.
+[22:6:10] O processo programa4 teve sua prioridade reduzida para 3.
+[22:6:10] O processo programa3 de prioridade 3 foi escalonado e está rodando.
+[22:6:12] O processo programa3 teve sua prioridade reduzida para 4.
+[22:6:12] O processo programa4 de prioridade 3 foi escalonado e está rodando.
+[22:6:14] O processo programa4 teve sua prioridade reduzida para 4.
+[22:6:14] O processo programa3 de prioridade 4 foi escalonado e está rodando.
+[22:6:15] O processo programa3 iniciou o I/O e será movido para a fila de espera.
+[22:6:15] O processo programa4 de prioridade 4 foi escalonado e está rodando.
+[22:6:16] O processo programa4 teve sua prioridade reduzida para 5.
+[22:6:16] O processo programa4 de prioridade 5 foi escalonado e está rodando.
+[22:6:18] O processo programa4 teve sua prioridade reduzida para 6.
+[22:6:18] O processo programa4 de prioridade 6 foi escalonado e está rodando.
+[22:6:18] O processo programa4 iniciou o I/O e será movido para a fila de espera.
+[22:6:18] O processo programa1 de prioridade 7 foi escalonado e está rodando.
+[22:6:20] O processo programa1 teve sua prioridade reduzida para 8.
+[22:6:20] O processo programa1 de prioridade 8 foi escalonado e está rodando.
+[22:6:20] Fim do I/O do processo programa3. Ele irá para a fila de prontos.
+[22:6:20] O processo programa1 de prioridade 8 foi interrompido por prioridade.
+[22:6:20] O processo programa3 de prioridade 4 foi escalonado e está rodando.
+O processo programa3 de prioridade 4 foi escalonado e está rodando.
+[22:6:22] O processo programa3 teve sua prioridade reduzida para 5.
+[22:6:22] O processo programa3 de prioridade 5 foi escalonado e está rodando.
+[22:6:23] O processo programa4 de prioridade 6 foi escalonado e está rodando.
+Fim do I/O do processo programa4. Ele irá para a fila de prontos.
+[22:6:24] O processo programa3 teve sua prioridade reduzida para 6.
+[22:6:24] O processo programa4 de prioridade 6 foi escalonado e está rodando.
+[22:6:26] O processo programa4 teve sua prioridade reduzida para 7.
+[22:6:26] O processo programa3 de prioridade 6 foi escalonado e está rodando.
+[22:6:28] O processo programa3 teve sua prioridade reduzida para 7.
+[22:6:28] O processo programa4 de prioridade 7 foi escalonado e está rodando.
+[22:6:30] O processo programa4 teve sua prioridade reduzida para 8.
+[22:6:30] O processo programa3 de prioridade 7 foi escalonado e está rodando.
+[22:6:32] O processo programa3 teve sua prioridade reduzida para 8.
+[22:6:32] O processo programa1 de prioridade 8 foi escalonado e está rodando.
+[22:6:34] O processo programa1 teve sua prioridade reduzida para 9.
+[22:6:34] O processo programa4 de prioridade 8 foi escalonado e está rodando.
+[22:6:36] O processo programa4 teve sua prioridade reduzida para 9.
+[22:6:36] O processo programa3 de prioridade 8 foi escalonado e está rodando.
+[22:6:38] O processo programa3 teve sua prioridade reduzida para 9.
+[22:6:38] O processo programa1 de prioridade 9 foi escalonado e está rodando.
+[22:6:40] O processo programa4 de prioridade 9 foi escalonado e está rodando.
+[22:6:41] O programa programa4 terminou a execução.
+[22:6:41] O processo programa3 de prioridade 9 foi escalonado e está rodando.
+[22:6:42] O processo programa1 de prioridade 9 foi escalonado e está rodando.
+[22:6:44] O processo programa3 de prioridade 9 foi escalonado e está rodando.
+[22:6:44] O programa programa3 terminou a execução.
+[22:6:44] O processo programa1 de prioridade 9 foi escalonado e está rodando.
+[22:6:46] O processo programa1 de prioridade 9 foi escalonado e está rodando.
+[22:6:51] O programa programa1 terminou a execução.
+[22:6:51] Todos os programas foram executados com sucesso.
+[22:6:51] Fila de Prontos: 
+[22:6:51] Fila de Espera: 
+[22:6:51] Lista de Terminados: programa2 2 programa4 9 programa3 9 programa1 9 

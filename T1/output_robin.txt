@@ -1,0 +1,73 @@
+[22:4:37] Interpretador Round-Robin:
+[22:4:37] O programa programa1 teve sintaxe válida e entrará na lista de novos programas
+[22:4:37] O programa programa2 teve sintaxe válida e entrará na lista de novos programas
+[22:4:37] O comando asdasdasdad na linha 2 não é reconhecido como um comando válido. A linha será ignorada.
+[22:4:37] O programa programa4 teve sintaxe válida e entrará na lista de novos programas
+[22:4:37] O programa programa3 teve sintaxe válida e entrará na lista de novos programas
+[22:4:37] Enviando programas ao escalonador round-robin..
+[22:4:37] Escalonador Round-Robin:
+[22:4:37] Processo programa1 entrou na fila de prontos.
+[22:4:37] Processo programa2 entrou na fila de prontos.
+[22:4:37] Processo programa4 entrou na fila de prontos.
+[22:4:37] Processo programa3 entrou na fila de prontos.
+[22:4:37] O processo programa1 foi escalonado e está rodando.
+[22:4:39] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[22:4:39] O processo programa2 foi escalonado e está rodando.
+[22:4:40] O programa programa2 terminou a execução.
+[22:4:40] O processo programa4 foi escalonado e está rodando.
+[22:4:41] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[22:4:41] O processo programa3 foi escalonado e está rodando.
+[22:4:43] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[22:4:43] O processo programa1 foi escalonado e está rodando.
+[22:4:45] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[22:4:45] O processo programa4 foi escalonado e está rodando.
+[22:4:47] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[22:4:47] O processo programa3 foi escalonado e está rodando.
+[22:4:48] O processo programa3 iniciou o I/O e será movido para a fila de espera.
+[22:4:48] O processo programa1 foi escalonado e está rodando.
+[22:4:49] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[22:4:49] O processo programa4 foi escalonado e está rodando.
+[22:4:51] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[22:4:51] O processo programa1 foi escalonado e está rodando.
+[22:4:53] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[22:4:53] O processo programa4 foi escalonado e está rodando.
+[22:4:53] Fim do I/O do processo programa3. Ele irá para a fila de prontos.
+O processo programa3 foi escalonado e está rodando.
+[22:4:54] O processo programa4 iniciou o I/O e será movido para a fila de espera.
+[22:4:54] O processo programa1 foi escalonado e está rodando.
+[22:4:55] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[22:4:55] O processo programa3 foi escalonado e está rodando.
+[22:4:57] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[22:4:57] O processo programa1 foi escalonado e está rodando.
+[22:4:59] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[22:4:59] O processo programa3 foi escalonado e está rodando.
+[22:4:59] Fim do I/O do processo programa4. Ele irá para a fila de prontos.
+[22:5:1] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[22:5:1] O processo programa1 foi escalonado e está rodando.
+[22:5:3] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[22:5:3] O processo programa4 foi escalonado e está rodando.
+[22:5:5] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[22:5:5] O processo programa3 foi escalonado e está rodando.
+[22:5:7] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[22:5:7] O processo programa1 foi escalonado e está rodando.
+[22:5:9] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[22:5:9] O processo programa4 foi escalonado e está rodando.
+[22:5:11] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[22:5:11] O processo programa3 foi escalonado e está rodando.
+[22:5:13] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[22:5:13] O processo programa1 foi escalonado e está rodando.
+[22:5:14] O programa programa1 terminou a execução.
+[22:5:14] O processo programa4 foi escalonado e está rodando.
+[22:5:15] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[22:5:15] O processo programa3 foi escalonado e está rodando.
+[22:5:17] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[22:5:17] O processo programa4 foi escalonado e está rodando.
+[22:5:19] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[22:5:19] O processo programa3 foi escalonado e está rodando.
+[22:5:20] O programa programa3 terminou a execução.
+[22:5:20] O processo programa4 foi escalonado e está rodando.
+[22:5:20] O programa programa4 terminou a execução.
+[22:5:20] Todos os programas foram executados com sucesso.
+[22:5:20] Fila de Prontos: 
+[22:5:20] Fila de Espera: 
+[22:5:20] Lista de Terminados: programa2 32628 programa1 32628 programa3 32628 programa4 32628 
