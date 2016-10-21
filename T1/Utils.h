@@ -5,6 +5,8 @@
 #define TIME_SLICE 2
 #define IO_TIME 5
 
+extern int priority;
+
 void printTime();
 
 

@@ -8,6 +8,8 @@
 #include <sys/shm.h>
 #include <sys/wait.h>
 
+int file_output_flag = false;
+
 // Checa a integridade do comando de entrada
 int integrityCheck(char * command, char * program){
 	struct stat programCheck;
@@ -46,6 +48,16 @@ int main(int argc, char const *argv[])
 		printTime();
 		printf("Erro na abertura do arquivo de entrada.\n");
 		exit(1);
+	}
+	if(file_output_flag == true){
+		output = fopen("output_robin.txt", "w");
+		if(output == NULL){
+			printTime();
+			printf("Erro na abertura do arquivo de saída.\n");
+			exit(1);
+		}
+
+		dup2(fileno(output), STDOUT_FILENO);
 	}
 
 	printTime();
@@ -102,5 +114,8 @@ int main(int argc, char const *argv[])
 		printf("Nenhuma entrada válida foi detecatada. O escalonador não será acionado.\n");
 	}
 	shmdt(mem);
+	if(file_output_flag == true){
+		fclose(output);
+	}
 	return 0;
 }

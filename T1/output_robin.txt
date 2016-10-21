@@ -1,73 +1,369 @@
-[22:4:37] Interpretador Round-Robin:
-[22:4:37] O programa programa1 teve sintaxe válida e entrará na lista de novos programas
-[22:4:37] O programa programa2 teve sintaxe válida e entrará na lista de novos programas
-[22:4:37] O comando asdasdasdad na linha 2 não é reconhecido como um comando válido. A linha será ignorada.
-[22:4:37] O programa programa4 teve sintaxe válida e entrará na lista de novos programas
-[22:4:37] O programa programa3 teve sintaxe válida e entrará na lista de novos programas
-[22:4:37] Enviando programas ao escalonador round-robin..
-[22:4:37] Escalonador Round-Robin:
-[22:4:37] Processo programa1 entrou na fila de prontos.
-[22:4:37] Processo programa2 entrou na fila de prontos.
-[22:4:37] Processo programa4 entrou na fila de prontos.
-[22:4:37] Processo programa3 entrou na fila de prontos.
-[22:4:37] O processo programa1 foi escalonado e está rodando.
-[22:4:39] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
-[22:4:39] O processo programa2 foi escalonado e está rodando.
-[22:4:40] O programa programa2 terminou a execução.
-[22:4:40] O processo programa4 foi escalonado e está rodando.
-[22:4:41] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
-[22:4:41] O processo programa3 foi escalonado e está rodando.
-[22:4:43] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
-[22:4:43] O processo programa1 foi escalonado e está rodando.
-[22:4:45] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
-[22:4:45] O processo programa4 foi escalonado e está rodando.
-[22:4:47] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
-[22:4:47] O processo programa3 foi escalonado e está rodando.
-[22:4:48] O processo programa3 iniciou o I/O e será movido para a fila de espera.
-[22:4:48] O processo programa1 foi escalonado e está rodando.
-[22:4:49] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
-[22:4:49] O processo programa4 foi escalonado e está rodando.
-[22:4:51] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
-[22:4:51] O processo programa1 foi escalonado e está rodando.
-[22:4:53] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
-[22:4:53] O processo programa4 foi escalonado e está rodando.
-[22:4:53] Fim do I/O do processo programa3. Ele irá para a fila de prontos.
-O processo programa3 foi escalonado e está rodando.
-[22:4:54] O processo programa4 iniciou o I/O e será movido para a fila de espera.
-[22:4:54] O processo programa1 foi escalonado e está rodando.
-[22:4:55] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
-[22:4:55] O processo programa3 foi escalonado e está rodando.
-[22:4:57] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
-[22:4:57] O processo programa1 foi escalonado e está rodando.
-[22:4:59] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
-[22:4:59] O processo programa3 foi escalonado e está rodando.
-[22:4:59] Fim do I/O do processo programa4. Ele irá para a fila de prontos.
-[22:5:1] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
-[22:5:1] O processo programa1 foi escalonado e está rodando.
-[22:5:3] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
-[22:5:3] O processo programa4 foi escalonado e está rodando.
-[22:5:5] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
-[22:5:5] O processo programa3 foi escalonado e está rodando.
-[22:5:7] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
-[22:5:7] O processo programa1 foi escalonado e está rodando.
-[22:5:9] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
-[22:5:9] O processo programa4 foi escalonado e está rodando.
-[22:5:11] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
-[22:5:11] O processo programa3 foi escalonado e está rodando.
-[22:5:13] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
-[22:5:13] O processo programa1 foi escalonado e está rodando.
-[22:5:14] O programa programa1 terminou a execução.
-[22:5:14] O processo programa4 foi escalonado e está rodando.
-[22:5:15] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
-[22:5:15] O processo programa3 foi escalonado e está rodando.
-[22:5:17] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
-[22:5:17] O processo programa4 foi escalonado e está rodando.
-[22:5:19] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
-[22:5:19] O processo programa3 foi escalonado e está rodando.
-[22:5:20] O programa programa3 terminou a execução.
-[22:5:20] O processo programa4 foi escalonado e está rodando.
-[22:5:20] O programa programa4 terminou a execução.
-[22:5:20] Todos os programas foram executados com sucesso.
-[22:5:20] Fila de Prontos: 
-[22:5:20] Fila de Espera: 
-[22:5:20] Lista de Terminados: programa2 32628 programa1 32628 programa3 32628 programa4 32628 
+[21:38:42] Interpretador Round-Robin:
+[21:38:42] O programa programa1 teve sintaxe válida e entrará na lista de novos programas
+[21:38:42] O programa programa2 teve sintaxe válida e entrará na lista de novos programas
+[21:38:42] O comando asdasdasdad na linha 2 não é reconhecido como um comando válido. A linha será ignorada.
+[21:38:42] O programa programa4 teve sintaxe válida e entrará na lista de novos programas
+[21:38:42] O programa programa3 teve sintaxe válida e entrará na lista de novos programas
+[21:38:42] Enviando programas ao escalonador round-robin..
+[21:38:42] Escalonador Round-Robin:
+[21:38:42] Processo programa1 entrou na fila de prontos.
+[21:38:42] Processo programa2 entrou na fila de prontos.
+[21:38:42] Processo programa4 entrou na fila de prontos.
+[21:38:42] Processo programa3 entrou na fila de prontos.
+[21:38:42] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:42] Em execução: programa1
+[21:38:42] Fila de Prontos: programa2 programa4 programa3 
+[21:38:42] Fila de Espera: 
+[21:38:42] Lista de Terminados: 
+
+------------------------------------------
+
+[21:38:44] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[21:38:44] O processo programa2 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:44] Em execução: programa2
+[21:38:44] Fila de Prontos: programa4 programa3 programa1 
+[21:38:44] Fila de Espera: 
+[21:38:44] Lista de Terminados: 
+
+------------------------------------------
+
+[21:38:45] O programa programa2 terminou a execução.
+[21:38:45] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:45] Em execução: programa4
+[21:38:45] Fila de Prontos: programa3 programa1 
+[21:38:45] Fila de Espera: 
+[21:38:45] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:46] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[21:38:46] O processo programa3 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:46] Em execução: programa3
+[21:38:46] Fila de Prontos: programa1 programa4 
+[21:38:46] Fila de Espera: 
+[21:38:46] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:48] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[21:38:48] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:48] Em execução: programa1
+[21:38:48] Fila de Prontos: programa4 programa3 
+[21:38:48] Fila de Espera: 
+[21:38:48] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:50] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[21:38:50] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:50] Em execução: programa4
+[21:38:50] Fila de Prontos: programa3 programa1 
+[21:38:50] Fila de Espera: 
+[21:38:50] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:52] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[21:38:52] O processo programa3 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:52] Em execução: programa3
+[21:38:52] Fila de Prontos: programa1 programa4 
+[21:38:52] Fila de Espera: 
+[21:38:52] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:53] O processo programa3 iniciou o I/O e será movido para a fila de espera.
+[21:38:53] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:53] Em execução: programa1
+[21:38:53] Fila de Prontos: programa4 
+[21:38:53] Fila de Espera: programa3 
+[21:38:53] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:54] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[21:38:54] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:54] Em execução: programa4
+[21:38:54] Fila de Prontos: programa1 
+[21:38:54] Fila de Espera: programa3 
+[21:38:54] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:56] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[21:38:56] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:56] Em execução: programa1
+[21:38:56] Fila de Prontos: programa4 
+[21:38:56] Fila de Espera: programa3 
+[21:38:56] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:58] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[21:38:58] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:58] Em execução: programa4
+[21:38:58] Fila de Prontos: programa1 
+[21:38:58] Fila de Espera: programa3 
+[21:38:58] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:58] Fim do I/O do processo programa3. Ele irá para a fila de prontos.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:58] Em execução: programa4
+[21:38:58] Fila de Prontos: programa1 programa3 
+[21:38:58] Fila de Espera: 
+[21:38:58] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:38:59] O processo programa4 iniciou o I/O e será movido para a fila de espera.
+[21:38:59] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:38:59] Em execução: programa1
+[21:38:59] Fila de Prontos: programa3 
+[21:38:59] Fila de Espera: programa4 
+[21:38:59] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:0] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[21:39:0] O processo programa3 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:0] Em execução: programa3
+[21:39:0] Fila de Prontos: programa1 
+[21:39:0] Fila de Espera: programa4 
+[21:39:0] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:2] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[21:39:2] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:2] Em execução: programa1
+[21:39:2] Fila de Prontos: programa3 
+[21:39:2] Fila de Espera: programa4 
+[21:39:2] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:4] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[21:39:4] O processo programa3 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:4] Em execução: programa3
+[21:39:4] Fila de Prontos: programa1 
+[21:39:4] Fila de Espera: programa4 
+[21:39:4] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:4] Fim do I/O do processo programa4. Ele irá para a fila de prontos.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:4] Em execução: programa3
+[21:39:4] Fila de Prontos: programa1 programa4 
+[21:39:4] Fila de Espera: 
+[21:39:4] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:6] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[21:39:6] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:6] Em execução: programa1
+[21:39:6] Fila de Prontos: programa4 programa3 
+[21:39:6] Fila de Espera: 
+[21:39:6] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:8] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[21:39:8] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:8] Em execução: programa4
+[21:39:8] Fila de Prontos: programa3 programa1 
+[21:39:8] Fila de Espera: 
+[21:39:8] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:10] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[21:39:10] O processo programa3 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:10] Em execução: programa3
+[21:39:10] Fila de Prontos: programa1 programa4 
+[21:39:10] Fila de Espera: 
+[21:39:10] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:12] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[21:39:12] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:12] Em execução: programa1
+[21:39:12] Fila de Prontos: programa4 programa3 
+[21:39:12] Fila de Espera: 
+[21:39:12] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:14] Processo programa1 interrompido por tempo. Irá para a fila de prontos.
+[21:39:14] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:14] Em execução: programa4
+[21:39:14] Fila de Prontos: programa3 programa1 
+[21:39:14] Fila de Espera: 
+[21:39:14] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:16] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[21:39:16] O processo programa3 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:16] Em execução: programa3
+[21:39:16] Fila de Prontos: programa1 programa4 
+[21:39:16] Fila de Espera: 
+[21:39:16] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:18] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[21:39:18] O processo programa1 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:18] Em execução: programa1
+[21:39:18] Fila de Prontos: programa4 programa3 
+[21:39:18] Fila de Espera: 
+[21:39:18] Lista de Terminados: programa2 
+
+------------------------------------------
+
+[21:39:19] O programa programa1 terminou a execução.
+[21:39:19] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:19] Em execução: programa4
+[21:39:19] Fila de Prontos: programa3 
+[21:39:19] Fila de Espera: 
+[21:39:19] Lista de Terminados: programa2 programa1 
+
+------------------------------------------
+
+[21:39:20] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[21:39:20] O processo programa3 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:20] Em execução: programa3
+[21:39:20] Fila de Prontos: programa4 
+[21:39:20] Fila de Espera: 
+[21:39:20] Lista de Terminados: programa2 programa1 
+
+------------------------------------------
+
+[21:39:22] Processo programa3 interrompido por tempo. Irá para a fila de prontos.
+[21:39:22] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:22] Em execução: programa4
+[21:39:22] Fila de Prontos: programa3 
+[21:39:22] Fila de Espera: 
+[21:39:22] Lista de Terminados: programa2 programa1 
+
+------------------------------------------
+
+[21:39:24] Processo programa4 interrompido por tempo. Irá para a fila de prontos.
+[21:39:24] O processo programa3 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:24] Em execução: programa3
+[21:39:24] Fila de Prontos: programa4 
+[21:39:24] Fila de Espera: 
+[21:39:24] Lista de Terminados: programa2 programa1 
+
+------------------------------------------
+
+[21:39:25] O programa programa3 terminou a execução.
+[21:39:25] O processo programa4 foi escalonado e está rodando.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:25] Em execução: programa4
+[21:39:25] Fila de Prontos: 
+[21:39:25] Fila de Espera: 
+[21:39:25] Lista de Terminados: programa2 programa1 programa3 
+
+------------------------------------------
+
+[21:39:25] O programa programa4 terminou a execução.
+[21:39:25] Todos os programas foram executados com sucesso.
+
+---------------- STATUS ATUAL -------------
+
+[21:39:25] Em execução: Nenhum
+[21:39:25] Fila de Prontos: 
+[21:39:25] Fila de Espera: 
+[21:39:25] Lista de Terminados: programa2 programa1 programa3 programa4 
+
+------------------------------------------
+

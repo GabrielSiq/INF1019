@@ -8,6 +8,8 @@
 #include <sys/shm.h>
 #include <sys/wait.h>
 
+int file_output_flag = false;
+
 // Checa a integridade do comando de entrada
 int integrityCheck(char * command, char * program, char * priority){
 	char priorityIntegrity[9];
@@ -40,7 +42,7 @@ int main(int argc, char const *argv[])
 	char command[CHAR_LIMIT], program[CHAR_LIMIT], priority[CHAR_LIMIT], priorityIntegrity[9];
 	char * newProgramsList[PROGRAM_LIMIT], cwd[1024], ascii[10]={0}, * mem;
 	int programCount=0, i, j, priorityList[PROGRAM_LIMIT], priorityValue, status, seg, pid, *mem2;
-	FILE *input;
+	FILE *input, *output;
 
 	if ((seg=shmget(5220,PROGRAM_LIMIT * sizeof(int),0600|IPC_CREAT))<0){
 	    perror("shmget error");
@@ -59,13 +61,23 @@ int main(int argc, char const *argv[])
 	    exit(-1);
 	}
 
-	// A entrada e a saída serão feitas por arquivo,
+	// A entrada e a saída podem ser feitas por arquivo,
 	// de modo a facilitar a avaliação e teste.
 	input = fopen("input_priority.txt", "r");
 	if(input == NULL){
 		printTime();
 		printf("Erro na abertura do arquivo de entrada.\n");
 		exit(1);
+	}
+	if(file_output_flag == true){
+		output = fopen("output_priority.txt", "w");
+		if(output == NULL){
+			printTime();
+			printf("Erro na abertura do arquivo de saída.\n");
+			exit(1);
+		}
+
+		dup2(fileno(output), STDOUT_FILENO);
 	}
 
 	printTime();
@@ -139,5 +151,8 @@ int main(int argc, char const *argv[])
 	}
 	shmdt(mem);
 	shmdt(mem2);
+	if(file_output_flag == true){
+		fclose(output);
+	}
 	return 0;
 }

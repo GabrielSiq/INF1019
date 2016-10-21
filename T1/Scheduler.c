@@ -14,6 +14,8 @@ Queue * waiting;
 Queue * terminated;
 NODE * running;
 
+int print_status_flag = true;
+
 int move_wait = false;
 int resume = false;
 int alarm_flag = false;
@@ -21,23 +23,35 @@ int priority = false;
 
 /* Imprime o status de todas as filas */
 void printStatus(){
-	printTime();
-	printf("Fila de Prontos: ");
-	printQueue(ready);
-	printTime();
-	printf("Fila de Espera: ");
-	printQueue(waiting);
-	printTime();
-	printf("Lista de Terminados: ");
-	printQueue(terminated);
+	if(print_status_flag == true){
+		printf("\n");
+		printf("---------------- STATUS ATUAL -------------\n");
+		printf("\n");
+		printTime();
+		if(running != NULL){
+			printf("Em execução: %s\n", running->data.name);
+		}
+		else{
+			printf("Em execução: Nenhum\n");
+		}
+		printTime();
+		printf("Fila de Prontos: ");
+		printQueue(ready);
+		printTime();
+		printf("Fila de Espera: ");
+		printQueue(waiting);
+		printTime();
+		printf("Lista de Terminados: ");
+		printQueue(terminated);
+		printf("\n");
+		printf("------------------------------------------\n");
+		printf("\n");
+	}
 }
 
 /* Handler para o sinal de término de I/O */
 void endIO(int signal){
 	resume = true;
-	printTime();
-	printf("Fim do I/O do processo %s. Ele irá para a fila de prontos.\n", waiting->head->data.name);
-	fflush(stdout);
 }
 
 /* Handler para o sinal de início de I/O */
@@ -148,6 +162,17 @@ void roundRobinScheduler(char ** newProgramsList, int programCount){
 			DestructQueue(waiting);
 			return;
 		}
+
+		// Tira processo da fila de espera e coloca em prontos.
+		if(resume == true){
+			printTime();
+			printf("Fim do I/O do processo %s. Ele irá para a fila de prontos.\n", waiting->head->data.name);
+			temp = Dequeue(waiting);
+			Enqueue(ready, temp);
+			resume = false;
+			printStatus();
+		}
+
 		// Escalona processo e dispara contagem de tempo
 		else if(running == NULL && !isEmpty(ready))
 		{
@@ -155,16 +180,11 @@ void roundRobinScheduler(char ** newProgramsList, int programCount){
 			kill(running->data.pid, SIGCONT);
 			printTime();
 			printf("O processo %s foi escalonado e está rodando.\n", running->data.name);
+			printStatus();
 			if(alarm_flag == false){
 				alarm(TIME_SLICE);
 				alarm_flag = true;
 			}
-		}
-		// Tira processo da fila de espera e coloca em prontos.
-		if(resume == true){
-			temp = Dequeue(waiting);
-			Enqueue(ready, temp);
-			resume = false;
 		}
 		
 		if(running != NULL){
@@ -227,6 +247,7 @@ void priorityScheduler(char ** newProgramsList, int * priorityList, int programC
 			kill(running->data.pid, SIGCONT);
 			printTime();
 			printf("O processo %s de prioridade %d foi escalonado e está rodando.\n", running->data.name, running->data.priority);
+			printStatus();
 		}
 		// Interrompe processo por prioridade.
 		else if(running != NULL && !isEmpty(ready)){
@@ -245,9 +266,12 @@ void priorityScheduler(char ** newProgramsList, int * priorityList, int programC
 		}
 		// Devolve à fila de prontos quando acaba I/O
 		if(resume == true){
+			printTime();
+			printf("Fim do I/O do processo %s. Ele irá para a fila de prontos.\n", waiting->head->data.name);
 			temp = Dequeue(waiting);
 			OrderEnqueue(ready, temp);
 			resume = false;
+			printStatus();
 		}
 
 		// Checa se nesse tempo o programa já terminou

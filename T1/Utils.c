@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include "Utils.h"
 
+int priority;
+
 void printTime(){
 	time_t rawtime;
   	struct tm * timeinfo;
@@ -87,7 +89,12 @@ void printQueue(Queue *queue){
     NODE * temp;
     int i=0;
     for (temp = queue->head; temp; temp = temp->prev){
-        printf("%s %d ", temp->data.name, temp->data.priority);
+        if(priority == true){
+            printf("%s %d ", temp->data.name, temp->data.priority);
+        }
+        else{
+            printf("%s ", temp->data.name);
+        }
         if(i > queue->size){
             break;
         }
