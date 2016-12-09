@@ -1,0 +1,542 @@
+Laboratorio 8 Sistemas de Computação ­ INF1019 
+Gabriel da Silva Siqueira - 1210689 - 3WB
+
+1) Execute o programa Corrida de Sapo algumas vezes e
+analise os resultados sobre a ordem de chegada dos
+sapos. Obs: compile com a opção –lpthread
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+#define NUM_THREADS 5
+#define PULO_MAXIMO 100
+#define DESCANSO_MAXIMO 1
+#define DISTANCIA_PARA_CORRER 100
+
+static int classificacao = 1;
+
+static void* Correr(void* sapo);
+
+int main()
+{
+	classificacao = 1;
+	pthread_t threads[NUM_THREADS];
+	int t;
+
+	printf("Corrida iniciada...\n");
+
+	for(t = 0; t < NUM_THREADS; t++)
+	{
+		pthread_create(&threads[t], NULL, Correr, (void *)t);
+	}
+
+	for(t = 0; t < NUM_THREADS; t++)
+	{
+		pthread_join(threads[t], NULL);
+	}
+
+	printf("\nAcabou!!\n");
+
+	pthread_exit(NULL);
+
+	return 0;
+}
+
+void* Correr(void* sapo)
+{
+	int pulos = 0;
+	int distanciaJaCorrida = 0;
+
+	while(distanciaJaCorrida <= DISTANCIA_PARA_CORRER)
+	{
+		int pulo = rand() % PULO_MAXIMO;
+		distanciaJaCorrida += pulo;
+		pulos++;
+		printf("Sapo %d pulou\n", (int)sapo);
+		int descanso = rand() % DESCANSO_MAXIMO;
+		sleep(descanso);
+	}
+
+	printf("Sapo %d chegou na posicao %d com %d pulos!\n", (int)sapo, classificacao, pulos);
+	classificacao++;
+
+	pthread_exit(NULL);
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab8$ ./teste
+Corrida iniciada...
+Sapo 0 pulou
+Sapo 1 pulou
+Sapo 2 pulou
+Sapo 3 pulou
+Sapo 4 pulou
+Sapo 4 pulou
+Sapo 1 pulou
+Sapo 3 pulou
+Sapo 2 pulou
+Sapo 0 pulou
+Sapo 3 chegou na posicao 1 com 2 pulos!
+Sapo 2 chegou na posicao 1 com 2 pulos!
+Sapo 1 chegou na posicao 1 com 2 pulos!
+Sapo 0 chegou na posicao 4 com 2 pulos!
+Sapo 4 chegou na posicao 1 com 2 pulos!
+
+Acabou!!
+
+Conclusão: Neste exercício, vemos que a falta da implementação de exclusão mútua sobre a variável de classificação acarretou com que 4 dos 5 sapos chegassem na mesma posição (1) e o sapo restante chegasse em 4 lugar. Isso ocorre pois os 4 threads acessaram a variável de classificação ao mesmo tempo e leram o mesmo valor. O que deveria ter ocorrido é que a variável só ficasse acessível para um thread por vez.
+
+2) Usando mutex, modifique o programa Corrida de Sampo
+para que o problema identificado anteriormente não
+ocorra. 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+#define NUM_THREADS 5
+#define PULO_MAXIMO 100
+#define DESCANSO_MAXIMO 1
+#define DISTANCIA_PARA_CORRER 100
+
+static int classificacao = 1;
+static pthread_mutex_t lock;
+
+static void* Correr(void* sapo);
+
+int main()
+{
+	classificacao = 1;
+	pthread_t threads[NUM_THREADS];
+	int t;
+
+	printf("Corrida iniciada...\n");
+
+	for(t = 0; t < NUM_THREADS; t++)
+	{
+		pthread_create(&threads[t], NULL, Correr, (void *)t);
+	}
+
+	for(t = 0; t < NUM_THREADS; t++)
+	{
+		pthread_join(threads[t], NULL);
+	}
+
+	printf("\nAcabou!!\n");
+
+	pthread_exit(NULL);
+
+	return 0;
+}
+
+void* Correr(void* sapo)
+{
+	int pulos = 0;
+	int distanciaJaCorrida = 0;
+
+	while(distanciaJaCorrida <= DISTANCIA_PARA_CORRER)
+	{
+		int pulo = rand() % PULO_MAXIMO;
+		distanciaJaCorrida += pulo;
+		pulos++;
+		printf("Sapo %d pulou\n", (int)sapo);
+		int descanso = rand() % DESCANSO_MAXIMO;
+		sleep(descanso);
+	}
+	pthread_mutex_lock(&lock);
+	printf("Sapo %d chegou na posicao %d com %d pulos!\n", (int)sapo, classificacao, pulos);
+	classificacao++;
+	pthread_mutex_unlock(&lock);
+
+	pthread_exit(NULL);
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab8$ ./teste
+Corrida iniciada...
+Sapo 1 pulou
+Sapo 2 pulou
+Sapo 0 pulou
+Sapo 3 pulou
+Sapo 4 pulou
+Sapo 0 pulou
+Sapo 3 pulou
+Sapo 2 pulou
+Sapo 1 pulou
+Sapo 4 pulou
+Sapo 3 chegou na posicao 1 com 2 pulos!
+Sapo 0 chegou na posicao 2 com 2 pulos!
+Sapo 2 pulou
+Sapo 4 chegou na posicao 3 com 2 pulos!
+Sapo 1 chegou na posicao 4 com 2 pulos!
+Sapo 2 pulou
+Sapo 2 chegou na posicao 5 com 4 pulos!
+
+Acabou!!
+
+Conclusão: Agora, ao contrário do que ocorreu no exercício anterior, não importa o número
+de vezes que o programa for executado, os sapos chegarão em posições diferentes, na ordem 
+correta. Isso ocorre pois uma thread só pode acessar a variável de classificação após outra
+ter acessado (tanto para dar print, quanto para incrementar).
+
+3) Usando threads, escreva um programa C que implemente o
+problema do produtor/consumidor. O produtor deve produzir
+dados (números inteiros pseudo-aleatórios) a cada 1 segundo
+colocando-os em uma fila (buffer, implementação circular). O
+consumidor deve retirar dados da fila a cada 2 segundos. O
+tamanho máximo da fila deve ser de 8 elementos (MAXFILA) e
+tanto o produtor como o consumidor devem produzir/consumir
+64 elementos (números inteiros de 1 a 64, por exemplo)
+evitando condições de corrida. Variáveis compartilhadas entre
+threads são simplesmente variáveis globais.
+
+
+!! Atenção !!
+Como já implementei exclusão mútua no Lab 7 (anterior), fui instruído a fazer essa questão
+sem exclusão mútua pela biblioteca. (ou seja, como faria no lab anterior)
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+#define NUMTHREADS 2
+#define LIMIT 20
+
+
+int buffer[8];
+int head = 0; // index do primeiro espaço ocupado
+int tail = 0; // index do proximo espaço vazio
+int num_elem = 0;
+
+int lock = 0;
+
+void* produtor(void* threadid) {
+	int i;
+	while(i < LIMIT)
+	{
+		sleep(1);
+		if(num_elem < 8){
+			// "prende" o buffer para uso
+			if(lock == 0){
+				lock = 1;
+				buffer[tail] = rand() % LIMIT;
+				printf("Produtor %d: Produzi %d.\n", threadid, buffer[tail]);
+				tail = (tail+1) % 8;
+				num_elem++;
+				i++;
+				lock = 0;
+			}
+		}
+		else{
+			printf("Produtor %d: Buffer cheio, serei suspenso.\n", threadid);
+		}
+	}
+	pthread_exit(NULL);
+}
+
+void* consumidor(void* threadid) {
+	int i;
+	while(i < LIMIT)
+	{
+		sleep(2);
+		if(num_elem > 0){
+			if(lock ==0){
+				lock = 1;
+				printf("Consumidor %d: Consumi %d.\n", threadid, buffer[head]);
+				head = (head+1) % 8;
+				num_elem--;
+				i++;
+				lock = 0;
+			}
+		}
+		else{
+			printf("Consumidor %d: Buffer vazio, serei suspenso.\n", threadid);
+		}
+	}
+	pthread_exit(NULL);
+}
+
+int main(int argc, char const *argv[])
+{
+	pthread_t threads[NUMTHREADS];
+
+	pthread_create(&threads[0], NULL, produtor, (void *)0);
+	pthread_create(&threads[1], NULL, consumidor, (void *)1);
+
+	for (int i = 0; i < NUMTHREADS; i++)
+	{
+		pthread_join(threads[i], NULL);
+	}
+	return 0;
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab8$ ./teste
+Produtor 0: Produzi 3.
+Consumidor 1: Consumi 3.
+Produtor 0: Produzi 6.
+Produtor 0: Produzi 17.
+Consumidor 1: Consumi 6.
+Produtor 0: Produzi 15.
+Produtor 0: Produzi 13.
+Consumidor 1: Consumi 17.
+Produtor 0: Produzi 15.
+Produtor 0: Produzi 6.
+Consumidor 1: Consumi 15.
+Produtor 0: Produzi 12.
+Produtor 0: Produzi 9.
+Consumidor 1: Consumi 13.
+Produtor 0: Produzi 1.
+Produtor 0: Produzi 2.
+Consumidor 1: Consumi 15.
+Produtor 0: Produzi 7.
+Produtor 0: Produzi 10.
+Consumidor 1: Consumi 6.
+Produtor 0: Produzi 19.
+Produtor 0: Produzi 3.
+Consumidor 1: Consumi 12.
+Produtor 0: Produzi 6.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 1: Consumi 9.
+Produtor 0: Produzi 0.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 1: Consumi 1.
+Produtor 0: Produzi 6.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 1: Consumi 2.
+Produtor 0: Produzi 12.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 1: Consumi 7.
+Produtor 0: Produzi 16.
+Consumidor 1: Consumi 10.
+Consumidor 1: Consumi 19.
+Consumidor 1: Consumi 3.
+Consumidor 1: Consumi 6.
+Consumidor 1: Consumi 0.
+Consumidor 1: Consumi 6.
+Consumidor 1: Consumi 12.
+Consumidor 1: Consumi 16.
+
+!! Atenção !!
+Como já implementei exclusão mútua no Lab 7 (anterior), fui instruído a fazer essa questão
+sem exclusão mútua pela biblioteca. (ou seja, como faria no lab anterior)
+
+Conclusão: A estrutura do programa é basicamente a mesma do laboratório anterior. A diferença aqui é que uso uma variável global lock que será usada pelas threads para controlar o acesso. Ainda assim, é possível que ambas as threads entrem no "if" ao mesmo tempo e entrem na região crítica, gerando inconsistência. Assim, essa solução está longe do ideal. A solução correta eu implementei no laboratório anterior, e pode ser vista também no exercício bônus abaixo, para multiplos produtores e consumidores.
+
+
+Bônus (use variáveis de condição)
+4) Modifique o programa anterior, para que haja 2 (ou mais)
+threads consumidor e 2 (ou mais) threads produtor. O que muda
+em relação ao uso do mutex e da variável de condição?
+
+(Feito com o Victor, porém adaptado para minhas estruturas de dados)
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+
+#define NUMTHREADS 4
+#define LIMIT 20
+
+
+int buffer[8];
+int head = 0; // index do primeiro espaço ocupado
+int tail = 0; // index do proximo espaço vazio
+int num_elem = 0;
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t production_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t consume_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t product = PTHREAD_COND_INITIALIZER;
+pthread_cond_t consume = PTHREAD_COND_INITIALIZER;
+
+void* produtor(void* threadid) {
+	int i;
+	while(i < LIMIT)
+	{
+		sleep(1);
+		if(num_elem < 8){
+			// "prende" o buffer para uso
+			pthread_mutex_lock(&mutex);
+			buffer[tail] = rand() % LIMIT;
+			printf("Produtor %d: Produzi %d.\n", threadid, buffer[tail]);
+			tail = (tail+1) % 8;
+			num_elem++;
+			i++;
+			// libera o buffer pra uso
+			pthread_mutex_unlock(&mutex);
+			pthread_cond_signal(&consume);
+		}
+		else{
+			printf("Produtor %d: Buffer cheio, serei suspenso.\n", threadid);
+			pthread_mutex_lock(&production_mutex);
+			pthread_cond_wait(&product, &production_mutex);
+			pthread_mutex_unlock(&production_mutex);
+			printf("Produtor %d: Fui liberado!\n", threadid);
+		}
+	}
+	pthread_exit(NULL);
+}
+
+void* consumidor(void* threadid) {
+	int i;
+	while(i < LIMIT)
+	{
+		sleep(2);
+		if(num_elem > 0){
+			pthread_mutex_lock(&mutex);
+			printf("Consumidor %d: Consumi %d.\n", threadid, buffer[head]);
+			head = (head+1) % 8;
+			num_elem--;
+			i++;
+			pthread_mutex_unlock(&mutex);
+			pthread_cond_signal(&product);
+		}
+		else{
+			printf("Consumidor %d: Buffer vazio, serei suspenso.\n", threadid);
+			pthread_mutex_lock(&consume_mutex);
+			pthread_cond_wait(&consume, &consume_mutex);
+			pthread_mutex_unlock(&consume_mutex);
+			printf("Consumidor %d: Fui liberado!\n", threadid);
+		}
+	}
+	pthread_exit(NULL);
+}
+
+int main(int argc, char const *argv[])
+{
+	pthread_t threads[NUMTHREADS];
+
+	pthread_create(&threads[0], NULL, produtor, (void *)0);
+	pthread_create(&threads[1], NULL, produtor, (void *)1);
+	pthread_create(&threads[2], NULL, consumidor, (void *)2);
+	pthread_create(&threads[3], NULL, consumidor, (void *)3);
+
+	for (int i = 0; i < NUMTHREADS; i++)
+	{
+		pthread_join(threads[i], NULL);
+	}
+	return 0;
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab8$ ./teste
+Produtor 0: Produzi 3.
+Produtor 1: Produzi 6.
+Consumidor 2: Consumi 3.
+Consumidor 3: Consumi 6.
+Produtor 0: Produzi 17.
+Produtor 1: Produzi 15.
+Produtor 0: Produzi 13.
+Produtor 1: Produzi 15.
+Consumidor 3: Consumi 17.
+Consumidor 2: Consumi 15.
+Produtor 0: Produzi 6.
+Produtor 1: Produzi 12.
+Produtor 0: Produzi 9.
+Produtor 1: Produzi 1.
+Consumidor 3: Consumi 13.
+Consumidor 2: Consumi 15.
+Produtor 0: Produzi 2.
+Produtor 1: Produzi 7.
+Produtor 0: Produzi 10.
+Produtor 1: Produzi 19.
+Consumidor 3: Consumi 6.
+Consumidor 2: Consumi 12.
+Produtor 0: Produzi 3.
+Produtor 1: Produzi 6.
+Produtor 0: Buffer cheio, serei suspenso.
+Produtor 1: Buffer cheio, serei suspenso.
+Consumidor 3: Consumi 9.
+Consumidor 2: Consumi 1.
+Produtor 1: Fui liberado!
+Produtor 0: Fui liberado!
+Produtor 1: Produzi 0.
+Produtor 0: Produzi 6.
+Consumidor 2: Consumi 2.
+Consumidor 3: Consumi 7.
+Produtor 1: Produzi 12.
+Produtor 0: Produzi 16.
+Produtor 1: Buffer cheio, serei suspenso.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 2: Consumi 10.
+Consumidor 3: Consumi 19.
+Produtor 1: Fui liberado!
+Produtor 0: Fui liberado!
+Produtor 1: Produzi 11.
+Produtor 0: Produzi 8.
+Consumidor 2: Consumi 3.
+Consumidor 3: Consumi 6.
+Produtor 1: Produzi 7.
+Produtor 0: Produzi 9.
+Produtor 1: Buffer cheio, serei suspenso.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 3: Consumi 0.
+Consumidor 2: Consumi 6.
+Produtor 1: Fui liberado!
+Produtor 0: Fui liberado!
+Produtor 1: Produzi 2.
+Produtor 0: Produzi 10.
+Consumidor 3: Consumi 12.
+Consumidor 2: Consumi 16.
+Produtor 1: Produzi 2.
+Produtor 0: Produzi 3.
+Produtor 1: Buffer cheio, serei suspenso.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 2: Consumi 11.
+Consumidor 3: Consumi 8.
+Produtor 1: Fui liberado!
+Produtor 0: Fui liberado!
+Produtor 1: Produzi 7.
+Produtor 0: Produzi 15.
+Consumidor 2: Consumi 7.
+Consumidor 3: Consumi 9.
+Produtor 1: Produzi 9.
+Produtor 0: Produzi 2.
+Produtor 1: Buffer cheio, serei suspenso.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 2: Consumi 2.
+Produtor 1: Fui liberado!
+Consumidor 3: Consumi 10.
+Produtor 0: Fui liberado!
+Produtor 1: Produzi 2.
+Produtor 0: Produzi 18.
+Consumidor 2: Consumi 2.
+Consumidor 3: Consumi 3.
+Produtor 1: Produzi 9.
+Produtor 0: Produzi 7.
+Produtor 1: Buffer cheio, serei suspenso.
+Produtor 0: Buffer cheio, serei suspenso.
+Consumidor 3: Consumi 7.
+Produtor 1: Fui liberado!
+Consumidor 2: Consumi 15.
+Produtor 0: Fui liberado!
+Produtor 1: Produzi 13.
+Produtor 0: Produzi 16.
+Consumidor 2: Consumi 9.
+Consumidor 3: Consumi 2.
+Produtor 1: Produzi 11.
+Produtor 0: Produzi 2.
+Consumidor 2: Consumi 2.
+Consumidor 3: Consumi 18.
+Consumidor 2: Consumi 9.
+Consumidor 3: Consumi 7.
+Consumidor 3: Consumi 13.
+Consumidor 2: Consumi 16.
+Consumidor 3: Consumi 11.
+Consumidor 2: Consumi 2.
+
+Conclusão: Aqui, por conveniência, adotamos um limite de 20 elementos para produzir/consumir, para a execução não ficar muito extensa. Ainda assim, para executar com 64 elementos é só mudar a variável global LIMIT de 20 para 64. Aqui, a exclusão mútua é implementada da seguinte forma. O mutex "mutex" controla o acesso ao buffer, da mesma forma que implementado na questão anterior. A diferença aqui é que, nos casos de buffer cheio e buffer vazio, usamos a variável de condição para suspender a thread e fazê-la esperar até que um signal seja enviado, liberando a condição. 
+
+Produtores possuem uma condição e mutex, Consumidores possuem outra condição e mutex. Aqui, enfrentamos o seguinte problema: duas threads eram bloqueadas, mas somente uma retornava. Suspeitamos que isso se dê ao comportamento imprevisível da função de wait quando a a thread a qual está associada está desbloqueada (como descrito na documentação). Para resolver esse problema, implementamos exclusão mútua na variável de condição, resolvendo o problema. Também foi importante usar signal ao invés de broadcast, para que no caso de haver só um item sobrando no buffer, duas ou mais threads não serem desbloqueadas e tentarem consumir mais do que é possível.
+
+

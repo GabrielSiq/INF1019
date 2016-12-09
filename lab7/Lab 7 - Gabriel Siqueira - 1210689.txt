@@ -1,0 +1,324 @@
+Laboratorio 7 Sistemas de Computação ­ INF1019 
+Gabriel da Silva Siqueira - 1210689 - 3WB
+
+1) Implemente um programa que crie 2 threads:
+Uma delas (contCrescente) contará de 1 a N=20 (com
+pausas de T1=1 segundo)
+A outra (contDecrescente) de M=30 a 1 (com pausas de
+T2=2 segundos).
+Compile com a opção –l pthread
+
+#include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
+
+void * contCrescente(){
+	for (int i = 0; i < 20; ++i)
+	{
+		printf("Thread 1 - Contagem Crescente: %d\n", i);
+		sleep(1);
+	}
+}
+
+void * contDescrecente(){
+	for (int i = 30; i > 0; --i)
+	{
+		printf("Thread 2 - Contagem Decrescente: %d\n", i);
+		sleep(2);
+	}
+}
+
+int main(int argc, char const *argv[])
+{
+	pthread_t threads[2];
+
+	pthread_create(&threads[0], NULL, contCrescente, NULL);
+	pthread_create(&threads[1], NULL, contDescrecente, NULL);
+	pthread_join(threads[0], NULL);
+	pthread_join(threads[1], NULL);
+
+	return 0;
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab7$ ./teste
+Thread 1 - Contagem Crescente: 0
+Thread 2 - Contagem Decrescente: 30
+Thread 1 - Contagem Crescente: 1
+Thread 2 - Contagem Decrescente: 29
+Thread 1 - Contagem Crescente: 2
+Thread 1 - Contagem Crescente: 3
+Thread 2 - Contagem Decrescente: 28
+Thread 1 - Contagem Crescente: 4
+Thread 1 - Contagem Crescente: 5
+Thread 2 - Contagem Decrescente: 27
+Thread 1 - Contagem Crescente: 6
+Thread 1 - Contagem Crescente: 7
+Thread 2 - Contagem Decrescente: 26
+Thread 1 - Contagem Crescente: 8
+Thread 1 - Contagem Crescente: 9
+Thread 2 - Contagem Decrescente: 25
+Thread 1 - Contagem Crescente: 10
+Thread 1 - Contagem Crescente: 11
+Thread 2 - Contagem Decrescente: 24
+Thread 1 - Contagem Crescente: 12
+Thread 1 - Contagem Crescente: 13
+Thread 2 - Contagem Decrescente: 23
+Thread 1 - Contagem Crescente: 14
+Thread 1 - Contagem Crescente: 15
+Thread 2 - Contagem Decrescente: 22
+Thread 1 - Contagem Crescente: 16
+Thread 1 - Contagem Crescente: 17
+Thread 2 - Contagem Decrescente: 21
+Thread 1 - Contagem Crescente: 18
+Thread 1 - Contagem Crescente: 19
+Thread 2 - Contagem Decrescente: 20
+Thread 2 - Contagem Decrescente: 19
+Thread 2 - Contagem Decrescente: 18
+Thread 2 - Contagem Decrescente: 17
+Thread 2 - Contagem Decrescente: 16
+Thread 2 - Contagem Decrescente: 15
+Thread 2 - Contagem Decrescente: 14
+Thread 2 - Contagem Decrescente: 13
+Thread 2 - Contagem Decrescente: 12
+Thread 2 - Contagem Decrescente: 11
+Thread 2 - Contagem Decrescente: 10
+Thread 2 - Contagem Decrescente: 9
+Thread 2 - Contagem Decrescente: 8
+Thread 2 - Contagem Decrescente: 7
+Thread 2 - Contagem Decrescente: 6
+Thread 2 - Contagem Decrescente: 5
+Thread 2 - Contagem Decrescente: 4
+Thread 2 - Contagem Decrescente: 3
+Thread 2 - Contagem Decrescente: 2
+Thread 2 - Contagem Decrescente: 1
+
+
+Conclusão: Vimos então que cada thread executou separadamente sua rotina. contCrescente (thread 1) imprimia os números em ordem crescente com o dobro da velocidade do contDecrescente, como previsto.
+
+2) Acrescente agora uma variável global inteira que é
+inicializada com zero, incrementada e impressa na tela por
+cada thread. Verifique que ambas as threads manipulam a
+mesma variável.
+
+#include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
+
+int contador = 0;
+
+void * contCrescente(){
+	for (int i = 0; i < 20; ++i)
+	{
+		sleep(1);
+		contador += 1;
+		printf("Thread 1 - Contagem Crescente incrementou o contador para %d\n", contador);
+	}
+}
+
+void * contDescrecente(){
+	for (int i = 30; i > 0; --i)
+	{
+		sleep(2);
+		contador += 1;
+		printf("Thread 2 - Contagem Decrescente incrementou o contador para  %d\n", contador);
+
+	}
+}
+
+int main(int argc, char const *argv[])
+{
+	pthread_t threads[2];
+
+	pthread_create(&threads[0], NULL, contCrescente, NULL);
+	pthread_create(&threads[1], NULL, contDescrecente, NULL);
+	pthread_join(threads[0], NULL);
+	pthread_join(threads[1], NULL);
+
+	return 0;
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab7$ ./teste
+Thread 1 - Contagem Crescente incrementou o contador para 1
+Thread 2 - Contagem Decrescente incrementou o contador para  2
+Thread 1 - Contagem Crescente incrementou o contador para 3
+Thread 1 - Contagem Crescente incrementou o contador para 4
+Thread 2 - Contagem Decrescente incrementou o contador para  5
+Thread 1 - Contagem Crescente incrementou o contador para 6
+Thread 1 - Contagem Crescente incrementou o contador para 7
+Thread 2 - Contagem Decrescente incrementou o contador para  8
+Thread 1 - Contagem Crescente incrementou o contador para 9
+Thread 1 - Contagem Crescente incrementou o contador para 10
+Thread 2 - Contagem Decrescente incrementou o contador para  11
+Thread 1 - Contagem Crescente incrementou o contador para 12
+Thread 1 - Contagem Crescente incrementou o contador para 13
+Thread 2 - Contagem Decrescente incrementou o contador para  14
+Thread 1 - Contagem Crescente incrementou o contador para 15
+Thread 1 - Contagem Crescente incrementou o contador para 16
+Thread 2 - Contagem Decrescente incrementou o contador para  17
+Thread 1 - Contagem Crescente incrementou o contador para 18
+Thread 1 - Contagem Crescente incrementou o contador para 19
+Thread 2 - Contagem Decrescente incrementou o contador para  20
+Thread 1 - Contagem Crescente incrementou o contador para 21
+Thread 1 - Contagem Crescente incrementou o contador para 22
+Thread 2 - Contagem Decrescente incrementou o contador para  23
+Thread 1 - Contagem Crescente incrementou o contador para 24
+Thread 1 - Contagem Crescente incrementou o contador para 25
+Thread 2 - Contagem Decrescente incrementou o contador para  26
+Thread 1 - Contagem Crescente incrementou o contador para 27
+Thread 1 - Contagem Crescente incrementou o contador para 28
+Thread 2 - Contagem Decrescente incrementou o contador para  29
+Thread 1 - Contagem Crescente incrementou o contador para 30
+Thread 2 - Contagem Decrescente incrementou o contador para  31
+Thread 2 - Contagem Decrescente incrementou o contador para  32
+Thread 2 - Contagem Decrescente incrementou o contador para  33
+Thread 2 - Contagem Decrescente incrementou o contador para  34
+Thread 2 - Contagem Decrescente incrementou o contador para  35
+Thread 2 - Contagem Decrescente incrementou o contador para  36
+Thread 2 - Contagem Decrescente incrementou o contador para  37
+Thread 2 - Contagem Decrescente incrementou o contador para  38
+Thread 2 - Contagem Decrescente incrementou o contador para  39
+Thread 2 - Contagem Decrescente incrementou o contador para  40
+Thread 2 - Contagem Decrescente incrementou o contador para  41
+Thread 2 - Contagem Decrescente incrementou o contador para  42
+Thread 2 - Contagem Decrescente incrementou o contador para  43
+Thread 2 - Contagem Decrescente incrementou o contador para  44
+Thread 2 - Contagem Decrescente incrementou o contador para  45
+Thread 2 - Contagem Decrescente incrementou o contador para  46
+Thread 2 - Contagem Decrescente incrementou o contador para  47
+Thread 2 - Contagem Decrescente incrementou o contador para  48
+Thread 2 - Contagem Decrescente incrementou o contador para  49
+Thread 2 - Contagem Decrescente incrementou o contador para  50
+
+Conclusão: Aqui temos certeza que ambas as threads acessam a mesma variável global, pois os valores após acréscimo de uma thread são coerentes com os valores reportados pela outra thread. Assim, sabemos que as threads tem o mesmo espaço de endereçamento e não utilizam apenas uma cópia das variáveis.
+
+3) Usando threads, escreva um programa C que implemente o
+problema do produtor/consumidor. O produtor e o consumidor
+devem ser threads de execução dentro do mesmo processo
+compartilhando os recursos do processo. O produtor deve
+produzir dados (números inteiros pseudo-aleatórios) a cada 1
+segundo colocando-os em uma fila (buffer, implementação
+circular). O consumidor deve retirar dados da fila a cada 2
+segundos. O tamanho máximo da fila deve ser de 8 elementos
+(MAXFILA) e tanto o produtor como o consumidor devem
+produzir/consumir 64 elementos (números inteiros de 1 a 64, por
+exemplo) evitando condições de corrida. Variáveis
+compartilhadas entre threads são simplesmente variáveis
+globais.
+Para compilar o programa, utilize a opção -lpthread
+
+#include <pthread.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+int buffer[8];
+int head = 0; // index do primeiro espaço ocupado
+int tail = 0; // index do proximo espaço vazio
+int num_elem = 0;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+
+
+
+void * produtor(){
+	int i = 0;
+	while(i < 64){
+		sleep(1);
+		if(num_elem < 8){
+			// "prende" o buffer para uso
+			pthread_mutex_lock(&mutex);
+			buffer[tail] = rand() % 64;
+			printf("Produtor: acrescentei o numero %d\n", buffer[tail]);
+			tail = (tail+1) % 8;
+			num_elem++;
+			i++;
+			// libera o buffer pra uso
+			pthread_mutex_unlock(&mutex);
+		}
+		else{
+			printf("Produtor: O buffer está cheio\n");
+		}
+	}
+}
+
+void * consumidor(){
+	int i;
+	while(i < 64){
+		sleep(2);
+		if(num_elem > 0){
+			pthread_mutex_lock(&mutex);
+			printf("Consumidor: Consumi o numero %d\n", buffer[head]);
+			head = (head+1) % 8;
+			num_elem--;
+			i++;
+			pthread_mutex_unlock(&mutex);
+		}
+		else{
+			printf("Consumidor: O buffer está vazio\n");
+		}
+
+	}
+}
+
+int main(int argc, char const *argv[])
+{
+	pthread_t threads[2];
+
+	pthread_create(&threads[0], NULL, produtor, NULL);
+	pthread_create(&threads[1], NULL, consumidor, NULL);
+	pthread_join(threads[0], NULL);
+	pthread_join(threads[1], NULL);
+
+	return 0;
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab7$ ./teste
+Produtor: acrescentei o numero 39
+Consumidor: Consumi o numero 39
+Produtor: acrescentei o numero 6
+Produtor: acrescentei o numero 41
+Consumidor: Consumi o numero 6
+Produtor: acrescentei o numero 51
+Produtor: acrescentei o numero 17
+Consumidor: Consumi o numero 41
+Produtor: acrescentei o numero 63
+Produtor: acrescentei o numero 10
+Consumidor: Consumi o numero 51
+Produtor: acrescentei o numero 44
+Produtor: acrescentei o numero 41
+Consumidor: Consumi o numero 17
+Produtor: acrescentei o numero 13
+Produtor: acrescentei o numero 58
+Consumidor: Consumi o numero 63
+Produtor: acrescentei o numero 43
+Produtor: acrescentei o numero 50
+Consumidor: Consumi o numero 10
+Produtor: acrescentei o numero 59
+Produtor: acrescentei o numero 35
+Consumidor: Consumi o numero 44
+Produtor: acrescentei o numero 6
+Produtor: O buffer está cheio
+Consumidor: Consumi o numero 41
+Produtor: acrescentei o numero 60
+Produtor: O buffer está cheio
+Consumidor: Consumi o numero 13
+Produtor: acrescentei o numero 2
+Produtor: O buffer está cheio
+Consumidor: Consumi o numero 58
+Produtor: acrescentei o numero 20
+Produtor: O buffer está cheio
+Consumidor: Consumi o numero 43
+Produtor: acrescentei o numero 56
+
+Continua até 64 itens serem acrescentados e consumidos.
+
+Conclusão: Nesse exercício, as duas threads executam até que executem uma determinada tarefa 64 vezes. Tentativas falhas (buffer cheio ou vazio) não contam. Há também o uso de pthread_mutex_lock e pthread_mutex_unlock para implementação da exclusao mutua, que tive que pesquisar. O buffer circular é implementado por um array de 8 poisoces e dois indices, que indicam o começo e o fim da fila. 
+
+Podemos ver que, como o produtor é mais rápido que o consumidor, numa taxa de 2 pra 1, chega um tempo em que o produtor consegue inserir um valor mas não o seguinte, já que o buffer está cheio. Logo em seguida, o consumidor remove um valor e o produtor consegue inserir novamente.

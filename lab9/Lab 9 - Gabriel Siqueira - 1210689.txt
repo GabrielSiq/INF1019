@@ -1,0 +1,344 @@
+Laboratorio 9 Sistemas de Computação ­ INF1019 
+Gabriel da Silva Siqueira - 1210689 - 3WB
+
+1) Usando processos, escreva um programa C que
+implemente o problema do produtor/consumidor.
+Existem 2 consumidores. O produtor e os
+consumidores devem compartilhar os recursos do
+processo (filas e demais dados). O produtor deve
+produzir dados (números inteiros) a cada 1
+segundo colocando-os em uma fila (buffer). Os
+consumidores devem retirar dados da fila a cada 2
+segundos. O tamanho máximo da fila deve ser de
+8 elementos (MAXFILA) e tanto o produtor como
+os dois consumidores devem produzir/consumir
+64 elementos. 
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/msg.h>
+#include <string.h>
+#include <pthread.h>
+
+#define MAXFILA 8
+#define MSGMAX 50
+#define ITEMS 20 /* Altere aqui para mudar o número de itens a serem produzidos/consumidos */
+
+// Estrutura de buffer para mensagens
+// Será usada para ambos os exercícios e contém um id de tipo que ajudará
+// a discernir entre os processos futuramente
+// Sua implementação foi sugerida aqui: https://linux.die.net/man/2/msgsnd
+
+typedef struct msgbuf {
+long    mtype;
+char    mtext[MSGMAX];
+} message_buf;
+
+int message_count = 0, msqid;
+
+void * produtor(){
+	int i;
+	message_buf sbuf;
+	size_t buf_size;
+	for(i = 0; i < ITEMS; i++){
+		if(message_count < MAXFILA){
+			
+			sbuf.mtype = 1;
+
+			sprintf(sbuf.mtext, "Mensagem %d", i);
+
+			buf_size = strlen(sbuf.mtext) + 1 ;
+
+			if (msgsnd(msqid, &sbuf, buf_size, IPC_NOWAIT) < 0) {
+				perror("msgsnd");
+				exit(1);
+			}
+			
+			printf("O produtor produziu: %s\n", sbuf.mtext);
+			message_count++;
+		}
+		else{
+			printf("Fila cheia!\n");
+		}
+		sleep(1);
+	}
+}
+
+void * consumidor(void * id){
+	int i;
+	message_buf rbuf;
+	while(i < ITEMS/2){
+		if(message_count > 0){
+			if (msgrcv(msqid, &rbuf, MSGMAX, 1, 0) < 0) {
+				printf("Erro no consumidor %d\n", id);
+				exit(1);
+			}
+			printf("O consumidor %d consumiu: %s\n",id, rbuf.mtext);
+			message_count--;
+			i++;
+		}
+		else{
+			printf("Fila vazia\n");
+		}
+		sleep(2);
+	}
+}
+
+int main()
+{
+	int i;
+    key_t key = 2018;
+
+    pthread_t threads[3];
+
+    // Cria uma fila de mensagens com o ID que especificamos
+	if ((msqid = msgget(key, IPC_CREAT | 0666 )) < 0) {
+		perror("msgget");
+		exit(1);
+	}
+
+	// Cria um produtor e dois consumidores numerados
+	pthread_create(&threads[0], NULL, produtor, NULL);
+	pthread_create(&threads[1], NULL, consumidor, (void *) 1);
+	pthread_create(&threads[2], NULL, consumidor, (void *) 2);
+
+	for (i = 0; i < 3; ++i)
+	{
+		pthread_join(threads[i], NULL);
+	}
+
+	pthread_exit(NULL);
+
+	return 0;
+
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab9$ ./teste
+O produtor produziu: Mensagem 0
+O consumidor 1 consumiu: Mensagem 0
+Fila vazia
+O produtor produziu: Mensagem 1
+O consumidor 1 consumiu: Mensagem 1
+O produtor produziu: Mensagem 2
+O consumidor 2 consumiu: Mensagem 2
+O produtor produziu: Mensagem 3
+O consumidor 1 consumiu: Mensagem 3
+Fila vazia
+O produtor produziu: Mensagem 4
+O produtor produziu: Mensagem 5
+O consumidor 1 consumiu: Mensagem 4
+O consumidor 2 consumiu: Mensagem 5
+O produtor produziu: Mensagem 6
+O produtor produziu: Mensagem 7
+O consumidor 2 consumiu: Mensagem 7
+O consumidor 1 consumiu: Mensagem 6
+O produtor produziu: Mensagem 8
+O produtor produziu: Mensagem 9
+O consumidor 1 consumiu: Mensagem 8
+O consumidor 2 consumiu: Mensagem 9
+O produtor produziu: Mensagem 10
+O produtor produziu: Mensagem 11
+O consumidor 2 consumiu: Mensagem 11
+O consumidor 1 consumiu: Mensagem 10
+O produtor produziu: Mensagem 12
+O produtor produziu: Mensagem 13
+O consumidor 2 consumiu: Mensagem 12
+O consumidor 1 consumiu: Mensagem 13
+O produtor produziu: Mensagem 14
+O produtor produziu: Mensagem 15
+O consumidor 2 consumiu: Mensagem 14
+O consumidor 1 consumiu: Mensagem 15
+O produtor produziu: Mensagem 16
+O produtor produziu: Mensagem 17
+O consumidor 2 consumiu: Mensagem 16
+O consumidor 1 consumiu: Mensagem 17
+O produtor produziu: Mensagem 18
+O produtor produziu: Mensagem 19
+O consumidor 2 consumiu: Mensagem 18
+O consumidor 2 consumiu: Mensagem 19
+
+Conclusão: Antes de mais nada, o código foi testado para 20 itens produzidos e consumidos. Para 64 (que também testei) basta substutuir 64 em ITEMS
+no topo do código. Decidi implementar usando threads, para continuar treinando. Checo também se a fila tem mais de
+MAXFILA elementos ou menos de 0, mas não sei se é necessário, já que imagino que as funções de send e receive tratem o caso de não ter nada na fila e
+o tamanho máximo ser alcançado. Ainda assim, o enunciado pedia para impor esse limite na fila de mensagens, então o fiz.
+Podemos ver que os consumidores consomem as mensagens aleatoriamente, as vezes o consumidor 1 chega primeiro, as vezes o consumidor 2 chega primeiro.
+A biblioteca sugerida foi relativamente simples de usar e facilita bastante a comunicação entre processos.
+
+
+2) Tal como no exercício anterior, implemente a troca
+de mensagens sé que neste exercício as mensagens
+devem ser direcionadas para um dos consumidores.
+Assim, serão geradas 64 mensagens, sendo 32 para
+um dos consumidores e 32 para o outro.
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/msg.h>
+#include <string.h>
+#include <pthread.h>
+
+#define MAXFILA 8
+#define MSGMAX 50
+#define ITEMS 20 /* Altere aqui para mudar o número de itens a serem produzidos/consumidos */
+
+// Estrutura de buffer para mensagens
+// Será usada para ambos os exercícios e contém um id de tipo que ajudará
+// a discernir entre os processos futuramente
+// Sua implementação foi sugerida aqui: https://linux.die.net/man/2/msgsnd
+
+typedef struct msgbuf {
+long    mtype;
+char    mtext[MSGMAX];
+} message_buf;
+
+int message_count = 0, msqid;
+static pthread_mutex_t lock;
+
+
+void * produtor(){
+	int i;
+	message_buf sbuf;
+	size_t buf_size;
+	for(i = 0; i < ITEMS; i++){
+		if(message_count < MAXFILA){
+			
+			sbuf.mtype = (i % 2) + 1;
+
+			sprintf(sbuf.mtext, "Mensagem %d", i);
+
+			buf_size = strlen(sbuf.mtext) + 1 ;
+
+			if (msgsnd(msqid, &sbuf, buf_size, IPC_NOWAIT) < 0) {
+				perror("msgsnd");
+				exit(1);
+			}
+			
+			printf("O produtor produziu: %s\n", sbuf.mtext);
+			message_count++;
+		}
+		else{
+			printf("Fila cheia!\n");
+		}
+
+		sleep(1);
+	}
+}
+
+void * consumidor(void * id){
+	int i; 
+	message_buf rbuf;
+	while(i < ITEMS/2){
+		if(message_count > 0){
+			if (msgrcv(msqid, &rbuf, MSGMAX, (long) id, 0) < 0) {
+				printf("Erro no consumidor %d\n", id);
+				exit(1);
+			}
+			printf("O consumidor %d consumiu: %s\n",id, rbuf.mtext);
+			message_count--;
+			i++;
+		}
+		else{
+			printf("Fila vazia\n");
+		}
+		sleep(2);
+	}
+}
+
+int main()
+{
+	int i;
+    key_t key = 2025;
+
+    pthread_t threads[3];
+
+    // Cria uma fila de mensagens com o ID que especificamos
+	if ((msqid = msgget(key, IPC_CREAT | 0666 )) < 0) {
+		perror("msgget");
+		exit(1);
+	}
+
+	// Cria um produtor e dois consumidores numerados
+	pthread_create(&threads[0], NULL, produtor, NULL);
+	pthread_create(&threads[1], NULL, consumidor, (void *) 1);
+	pthread_create(&threads[2], NULL, consumidor, (void *) 2);
+
+	for (i = 0; i < 3; ++i)
+	{
+		pthread_join(threads[i], NULL);
+	}
+
+	pthread_exit(NULL);
+
+	return 0;
+
+}
+
+Saída:
+
+gabrielsiq@gabrielsiq-G551JM:~/Documents/INF1019/lab9$ ./teste
+O produtor produziu: Mensagem 0
+O consumidor 1 consumiu: Mensagem 0
+Fila vazia
+O produtor produziu: Mensagem 1
+O consumidor 2 consumiu: Mensagem 1
+O produtor produziu: Mensagem 2
+O consumidor 1 consumiu: Mensagem 2
+O produtor produziu: Mensagem 3
+O consumidor 2 consumiu: Mensagem 3
+O produtor produziu: Mensagem 4
+O consumidor 1 consumiu: Mensagem 4
+O produtor produziu: Mensagem 5
+O consumidor 2 consumiu: Mensagem 5
+Fila vazia
+O produtor produziu: Mensagem 6
+O produtor produziu: Mensagem 7
+O consumidor 2 consumiu: Mensagem 7
+O consumidor 1 consumiu: Mensagem 6
+O produtor produziu: Mensagem 8
+O produtor produziu: Mensagem 9
+O consumidor 2 consumiu: Mensagem 9
+O consumidor 1 consumiu: Mensagem 8
+O produtor produziu: Mensagem 10
+O produtor produziu: Mensagem 11
+O consumidor 2 consumiu: Mensagem 11
+O consumidor 1 consumiu: Mensagem 10
+O produtor produziu: Mensagem 12
+O produtor produziu: Mensagem 13
+O consumidor 2 consumiu: Mensagem 13
+O consumidor 1 consumiu: Mensagem 12
+O produtor produziu: Mensagem 14
+O produtor produziu: Mensagem 15
+O consumidor 2 consumiu: Mensagem 15
+O consumidor 1 consumiu: Mensagem 14
+O produtor produziu: Mensagem 16
+O produtor produziu: Mensagem 17
+O consumidor 2 consumiu: Mensagem 17
+O consumidor 1 consumiu: Mensagem 16
+O produtor produziu: Mensagem 18
+O produtor produziu: Mensagem 19
+O consumidor 2 consumiu: Mensagem 19
+O consumidor 1 consumiu: Mensagem 18
+
+Conclusão: A implementação aqui é muito similar à implementação do item anterior. Não há muitas diferenças.
+O mais importante são duas linhas:
+
+No Produtor:
+sbuf.mtype = (i % 2) + 1;
+
+Faz com que as mensagens enviadas pelo produtor tenham os tipos alternados 1 e 2. Assim, produz-se uma
+mensagem com cada tipo, que por conveniência coincidem com os ids que dei para o meus consumidores.
+
+No Consumidor:
+
+if (msgrcv(msqid, &rbuf, MSGMAX, (long) id, 0) < 0) {
+
+Faz com que o consumidor apenas receba mensagens de tipo igual ao seu id. Assim, temos apenas
+uma função de produtor e uma função de consumidor.
+
+Por fim, podemos observar que independente da ordem de chegada das threads (vemos que às vezes
+a thread 2 chega na frente da 1), os consumidores pegam apenas as mensagens com os tipos que
+deveriam.
