@@ -68,7 +68,7 @@ int checkCommand(char * command){
 
 	while( existingCommands[i] != NULL ){
 		if(strcmp(command, existingCommands[i]) == 0){
-			printf("It's a match!\n");
+			//printf("It's a match!\n");
 			return 0;
 		}
 		i++;
@@ -85,10 +85,12 @@ void humanReadableToMachine(char * command){
 			command[i] = reserved[0];
 		i++;
 	}
-	printf("HtM:%s\n", command);
+	//printf("HtM:%s\n", command);
 }
 
 /* Does basic checks on the input, preparing to send to the server */
+/* Base command validation is done exclusively client-side (meaning, here) 
+   On the other hand, parameter validation is done exclusively server side (meaning, not here)*/ 
 char * inputValidation(char * command){
 	char * mainCommand, buf[BUFSIZE];
 
@@ -101,7 +103,7 @@ char * inputValidation(char * command){
 	mainCommand = strtok(buf, " \n\t");
 	
 	if(checkCommand(mainCommand) == 0){
-		printf("Comando valido!\n");
+		//printf("Comando valido!\n");
 		humanReadableToMachine(command);
 		return 0;
 	}
@@ -162,7 +164,7 @@ int main(int argc, char **argv) {
     	printf("Digite um comando: ");
     	fgets(buf, BUFSIZE, stdin);
     	if(inputValidation(buf) == 0){
-    		
+
     		/* send the message to the server */
 		    serverlen = sizeof(serveraddr);
 		    n = sendto(sockfd, buf, strlen(buf), 0, &serveraddr, serverlen);
@@ -170,10 +172,10 @@ int main(int argc, char **argv) {
 		      error("ERROR in sendto");
 		    
 		    /* print the server's reply */
-		    n = recvfrom(sockfd, buf, strlen(buf), 0, &serveraddr, &serverlen);
+		    n = recvfrom(sockfd, buf, BUFSIZE, 0, &serveraddr, &serverlen);
 		    if (n < 0) 
 		      error("ERROR in recvfrom");
-		    printf("Echo from server: %s", buf);
+		  	printf("Server: %s\n", buf);
 	    }
     }
     return 0;

@@ -19,15 +19,68 @@
  * error - wrapper for perror
  */
 void error(char *msg) {
-  perror(msg);
-  exit(1);
+	perror(msg);
+	exit(1);
 }
-int parse (char *buff, int *cmd, char *name) {
-    char *cmdstr;
-    
-    cmdstr = strtok(buff," ");
-        name = strtok(NULL,"\0");
-    cmd = atoi(cmdstr);
+
+char * readFile(){
+	return "Voce chamou a funcao que le arquivos";
+}
+
+char * writeFile(){
+	return "Voce chamou a funcao que escreve arquivos";
+}
+
+char * fileInfo(){
+	return "Voce chamou a funcao que da informacoes sobre arquivos";
+}
+
+char * mkdir(){
+	return "Voce chamou a funcao que cria diretorios";
+}
+
+char * rm(){
+	return "Voce chamou a funcao que remove diretorios";
+}
+
+char * list(){
+	return "Voce chamou a funcao que lista arquivos no diretorio";
+}
+
+//empty string
+
+/* Routes the message to the appropriate function depending on the base command */
+/* Base command validation is done exclusively client-side (meaning, not here) 
+   On the other hand, parameter validation is done exclusively server side (meaning, here)*/ 
+int functionRouter (char *command) {
+	char * mainCommand, buf[BUFSIZE];
+
+	strcpy(buf, command);
+	mainCommand = strtok(buf, "|\n\t");
+	
+	if(strcmp(mainCommand, "read") == 0){
+		strcpy(command, readFile());
+	}
+	else if(strcmp(mainCommand, "write") == 0){
+		strcpy(command, writeFile());
+	}
+	else if(strcmp(mainCommand, "info") == 0){
+		strcpy(command, fileInfo());
+	}
+	else if(strcmp(mainCommand, "mkdir") == 0){
+		strcpy(command, mkdir());
+	}
+	else if(strcmp(mainCommand, "rm") == 0){
+		strcpy(command, rm());
+	}
+	else if(strcmp(mainCommand, "list") == 0){
+		strcpy(command, list());
+	}
+	else{
+		strcpy(command, "Erro de validação. Baixe a versao mais atualizada de seu cliente de acesso.");
+		return -1;
+	}
+	return 0;
 }
 int main(int argc, char **argv) {
   int sockfd; /* socket */
@@ -40,16 +93,16 @@ int main(int argc, char **argv) {
   char *hostaddrp; /* dotted decimal host addr string */
   int optval; /* flag value for setsockopt */
   int n; /* message byte size */
-    
+	
   char name[BUFSIZE];   // name of the file received from client
   int cmd;              // cmd received from client
-    
+
   /* 
    * check command line arguments 
    */
   if (argc != 2) {
-    fprintf(stderr, "usage: %s <port>\n", argv[0]);
-    exit(1);
+  	fprintf(stderr, "usage: %s <port>\n", argv[0]);
+  	exit(1);
   }
   portno = atoi(argv[1]);
 
@@ -58,7 +111,7 @@ int main(int argc, char **argv) {
    */
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if (sockfd < 0) 
-    error("ERROR opening socket");
+  	error("ERROR opening socket");
 
   /* setsockopt: Handy debugging trick that lets 
    * us rerun the server immediately after we kill it; 
@@ -67,7 +120,7 @@ int main(int argc, char **argv) {
    */
   optval = 1;
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, 
-	     (const void *)&optval , sizeof(int));
+  	(const void *)&optval , sizeof(int));
 
   /*
    * build the server's Internet address
@@ -81,8 +134,8 @@ int main(int argc, char **argv) {
    * bind: associate the parent socket with a port 
    */
   if (bind(sockfd, (struct sockaddr *) &serveraddr, 
-	   sizeof(serveraddr)) < 0) 
-    error("ERROR on binding");
+  	sizeof(serveraddr)) < 0) 
+  	error("ERROR on binding");
 
   /* 
    * main loop: wait for a datagram, then echo it
@@ -90,36 +143,37 @@ int main(int argc, char **argv) {
   clientlen = sizeof(clientaddr);
   while (1) {
 
-    /*
-     * recvfrom: receive a UDP datagram from a client
-     */
-    bzero(buf, BUFSIZE);
-    n = recvfrom(sockfd, buf, BUFSIZE, 0,
-		 (struct sockaddr *) &clientaddr, &clientlen);
-    if (n < 0)
-      error("ERROR in recvfrom");
-      
-    parse(buf, &cmd, name);
-    /* 
-     * gethostbyaddr: determine who sent the datagram
-     */
-    hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, 
-			  sizeof(clientaddr.sin_addr.s_addr), AF_INET);
-    if (hostp == NULL)
-      error("ERROR on gethostbyaddr");
-    hostaddrp = inet_ntoa(clientaddr.sin_addr);
-    if (hostaddrp == NULL)
-      error("ERROR on inet_ntoa\n");
-    printf("server received datagram from %s (%s)\n", 
-	   hostp->h_name, hostaddrp);
-    printf("server received %d/%d bytes: %s\n", strlen(buf), n, buf);
-    
-    /* 
-     * sendto: echo the input back to the client 
-     */
-    n = sendto(sockfd, buf, strlen(buf), 0, 
-	       (struct sockaddr *) &clientaddr, clientlen);
-    if (n < 0) 
-      error("ERROR in sendto");
+	/*
+	 * recvfrom: receive a UDP datagram from a client
+	 */
+  	bzero(buf, BUFSIZE);
+  	n = recvfrom(sockfd, buf, BUFSIZE, 0,
+  		(struct sockaddr *) &clientaddr, &clientlen);
+  	if (n < 0)
+  		error("ERROR in recvfrom");
+
+  	functionRouter(buf);
+
+	/* 
+	 * gethostbyaddr: determine who sent the datagram
+	 */
+  	hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, 
+  		sizeof(clientaddr.sin_addr.s_addr), AF_INET);
+  	if (hostp == NULL)
+  		error("ERROR on gethostbyaddr");
+  	hostaddrp = inet_ntoa(clientaddr.sin_addr);
+  	if (hostaddrp == NULL)
+  		error("ERROR on inet_ntoa\n");
+  	printf("server received datagram from %s (%s)\n", 
+  		hostp->h_name, hostaddrp);
+  	//printf("server received %d/%d bytes: %s\n", strlen(buf), n, buf);
+
+	/* 
+	 * sendto: echo the input back to the client 
+	 */
+  	n = sendto(sockfd, buf, strlen(buf), 0, 
+  		(struct sockaddr *) &clientaddr, clientlen);
+  	if (n < 0) 
+  		error("ERROR in sendto");
   }
 }
