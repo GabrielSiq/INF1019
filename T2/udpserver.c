@@ -24,27 +24,27 @@ void error(char *msg) {
 }
 
 char * readFile(){
-	return "Voce chamou a funcao que le arquivos";
+	return "Você chamou a função que lê arquivos";
 }
 
 char * writeFile(){
-	return "Voce chamou a funcao que escreve arquivos";
+	return "Você chamou a função que escreve arquivos";
 }
 
 char * fileInfo(){
-	return "Voce chamou a funcao que da informacoes sobre arquivos";
+	return "Você chamou a função que dá informações sobre arquivos";
 }
 
 char * mkdir(){
-	return "Voce chamou a funcao que cria diretorios";
+	return "Você chamou a função que cria diretórios";
 }
 
 char * rm(){
-	return "Voce chamou a funcao que remove diretorios";
+	return "Você chamou a função que remove diretórios";
 }
 
 char * list(){
-	return "Voce chamou a funcao que lista arquivos no diretorio";
+	return "Você chamou a função que lista arquivos no diretório";
 }
 
 //empty string
@@ -77,7 +77,7 @@ int functionRouter (char *command) {
 		strcpy(command, list());
 	}
 	else{
-		strcpy(command, "Erro de validação. Baixe a versao mais atualizada de seu cliente de acesso.");
+		strcpy(command, "Erro de validação. Baixe a versão mais atualizada de seu cliente de acesso.");
 		return -1;
 	}
 	return 0;

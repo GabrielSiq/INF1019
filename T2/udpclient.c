@@ -31,18 +31,18 @@ void error(char *msg) {
 /* Prints our friendly help page */
 void printHelp(){
 	printf("-------------------//-----------------\n");
-	printf("Ola, bem vindo ao nosso sistema de ajuda.\n");
-	printf("Utilizar nosso sistema de arquivos eh bem simples. Basta digitar o comando desejado e os parâmetros corretos. As opções de comando e parâmetros estão detalhadas a seguir:\n\n");
+	printf("Olá, bem vindo ao nosso sistema de ajuda.\n");
+	printf("Utilizar nosso sistema de arquivos é bem simples. Basta digitar o comando desejado e os parâmetros corretos. As opções de comando e parâmetros estão detalhadas a seguir:\n\n");
 
-	printf("1- read => le um numero de bytes de um determinado arquivo a partir de um offset. Também pode ser usada para criar um arquivo caso ele não exista.\n");
+	printf("1- read => lê um numero de bytes de um determinado arquivo a partir de um offset. Também pode ser usada para criar um arquivo caso ele não exista.\n");
 	printf("   Esqueleto: read path nrbytes offset\n");
 	printf("   Exemplo de uso: read /user/arquivo.txt 20 7\n\n");
 
-	printf("2- write => escreve um conteudo em um determinado arquivo a partir de um offset. Pode ser usado para remover um arquivo ao enviar uma string (payload) vazia.\n");
+	printf("2- write => escreve um conteúdo em um determinado arquivo a partir de um offset. Pode ser usado para remover um arquivo ao enviar uma string (payload) vazia.\n");
 	printf("   Esqueleto: write path payload offset\n");
 	printf("   Exemplo de uso: write /user/arquivo.txt \"laranjas e bananas\" 7\n\n");
 
-	printf("3- info => retorna informacoes sobre o arquivo escolhido.\n");
+	printf("3- info => retorna informações sobre o arquivo escolhido.\n");
 	printf("   Esqueleto: info path\n");
 	printf("   Exemplo de uso: info /user/arquivo.txt\n\n");
 
@@ -50,15 +50,15 @@ void printHelp(){
 	printf("   Esqueleto: mkdir path dirname\n");
 	printf("   Exemplo de uso: mkdir /user/ newfolder\n\n");
 
-	printf("5- rm => remove o subdiretorio especificado.\n");
+	printf("5- rm => remove o subdiretório especificado.\n");
 	printf("   Esqueleto: rm path dirname\n");
 	printf("   Exemplo de uso: rm /user/ oldfolder\n\n");
 
-	printf("6- list => lista todos os arquivos e subdiretorios no local indicado.\n");
+	printf("6- list => lista todos os arquivos e subdiretórios no local indicado.\n");
 	printf("   Esqueleto: list path\n");
 	printf("   Exemplo de uso: list /user/\n\n");
 
-	printf("Viu como eh facil? Agora eh sua vez!\n");
+	printf("Viu como é fácil? Agora é sua vez!\n");
 	printf("-------------------//-----------------\n");
 }
 
@@ -95,7 +95,7 @@ char * inputValidation(char * command){
 	char * mainCommand, buf[BUFSIZE];
 
 	if(strstr(command, reserved) != NULL){
-		printf("Seu comando contem a substring reservada \"%s\" e nao eh permitido por nosso sistema. Tente novamente.\n", reserved);
+		printf("Seu comando contém a substring reservada \"%s\" e nao é permitido por nosso sistema. Tente novamente.\n", reserved);
 		return -3;
 	}
 
@@ -112,11 +112,11 @@ char * inputValidation(char * command){
 		return -1;
 	}
 	else if(strcmp(mainCommand, "quit") == 0){
-		printf("Ate breve!\n");
+		printf("Até breve!\n");
 		exit(0);
 	}
 	else{
-		printf("Nao foi reconhecido um comando valido. Digite \"help\" se precisar de ajuda\n");
+		printf("Não foi reconhecido um comando válido. Digite \"help\" se precisar de ajuda\n");
 		return -2;
 	}
 }
