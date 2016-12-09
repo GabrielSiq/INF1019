@@ -23,27 +23,33 @@ void error(char *msg) {
 	exit(1);
 }
 
-char * readFile(){
+char * readFile(char * path, int nrbytes, int offset){
+	printf("Devo ler %d bytes do arquivo %s a partir do offset %d.\n", nrbytes, path, offset );
 	return "Você chamou a função que lê arquivos";
 }
 
-char * writeFile(){
+char * writeFile(char * path, char * payload, int offset){
+	printf("Devo escrever a string %s no arquivo %s a partir do offset %d.\n", payload, path, offset);
 	return "Você chamou a função que escreve arquivos";
 }
 
-char * fileInfo(){
+char * fileInfo(char * path){
+	printf("Devo dar informações sobre o arquivo %s.\n", path);
 	return "Você chamou a função que dá informações sobre arquivos";
 }
 
-char * mkdir(){
+char * mkdir(char * path, char * dirname){
+	printf("Devo criar um diretório de nome %s em %s.\n", dirname, path);
 	return "Você chamou a função que cria diretórios";
 }
 
-char * rm(){
+char * rm(char * path, char * dirname){
+	printf("Devo remover o diretório de nome %s em %s.\n", dirname, path);
 	return "Você chamou a função que remove diretórios";
 }
 
-char * list(){
+char * list(char * path){
+	printf("Devo listar todos os arquivos e diretórios em %s.\n", path);
 	return "Você chamou a função que lista arquivos no diretório";
 }
 
@@ -54,30 +60,43 @@ char * list(){
    On the other hand, parameter validation is done exclusively server side (meaning, here)*/ 
 int functionRouter (char *command) {
 	char * mainCommand, buf[BUFSIZE];
+	char * params[10];
+	int n = 0;
 
 	strcpy(buf, command);
-	mainCommand = strtok(buf, "|\n\t");
+
+	for (char * p = strtok(buf, "|"); p; p = strtok(NULL, "|"))
+	{
+	    if (p == NULL)
+	    {
+	        break;
+	    }
+	    params[n++] = p;
+	    printf("%s ", params[n-1]);
+	}
+
+	mainCommand = params[0];
 	
-	if(strcmp(mainCommand, "read") == 0){
-		strcpy(command, readFile());
+	if(strcmp(mainCommand, "read") == 0 && n == 4){
+		strcpy(command, readFile(params[1], atoi(params[2]), atoi(params[3])));
 	}
-	else if(strcmp(mainCommand, "write") == 0){
-		strcpy(command, writeFile());
+	else if(strcmp(mainCommand, "write") == 0 && n == 4){
+		strcpy(command, writeFile(params[1], atoi(params[2]), atoi(params[3])));
 	}
-	else if(strcmp(mainCommand, "info") == 0){
-		strcpy(command, fileInfo());
+	else if(strcmp(mainCommand, "info") == 0 && n == 2){
+		strcpy(command, fileInfo(params[1]));
 	}
-	else if(strcmp(mainCommand, "mkdir") == 0){
-		strcpy(command, mkdir());
+	else if(strcmp(mainCommand, "mkdir") == 0 && n == 3){
+		strcpy(command, mkdir(params[1], params[2]));
 	}
-	else if(strcmp(mainCommand, "rm") == 0){
-		strcpy(command, rm());
+	else if(strcmp(mainCommand, "rm") == 0 && n == 3){
+		strcpy(command, rm(params[1], params[2]));
 	}
-	else if(strcmp(mainCommand, "list") == 0){
-		strcpy(command, list());
+	else if(strcmp(mainCommand, "list") == 0 && n == 2){
+		strcpy(command, list(params[1]));
 	}
 	else{
-		strcpy(command, "Erro de validação. Baixe a versão mais atualizada de seu cliente de acesso.");
+		strcpy(command, "Erro nos parâmetros. Por favor, verifique a documentação dos comandos.");
 		return -1;
 	}
 	return 0;

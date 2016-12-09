@@ -1,4 +1,3 @@
-//TODO: Remover os printfs desnecessários
 /* 
  * udpclient.c - A simple UDP client
  * usage: udpclient <host> <port>
@@ -40,7 +39,7 @@ void printHelp(){
 
 	printf("2- write => escreve um conteúdo em um determinado arquivo a partir de um offset. Pode ser usado para remover um arquivo ao enviar uma string (payload) vazia.\n");
 	printf("   Esqueleto: write path payload offset\n");
-	printf("   Exemplo de uso: write /user/arquivo.txt \"laranjas e bananas\" 7\n\n");
+	printf("   Exemplo de uso: write /user/arquivo.txt \"laranjasebananas\" 7\n\n");
 
 	printf("3- info => retorna informações sobre o arquivo escolhido.\n");
 	printf("   Esqueleto: info path\n");
