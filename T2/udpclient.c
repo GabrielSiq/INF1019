@@ -158,22 +158,23 @@ int main(int argc, char **argv) {
     bzero(buf, BUFSIZE);
     printf("Bem vindo ao nosso servidor de arquivos! Digite um comando ou digite \"help\" para obter ajuda ou \"quit\" para sair.\n");
 
-    do {
+    while(true){
     	printf("Digite um comando: ");
     	fgets(buf, BUFSIZE, stdin);
+    	if(inputValidation(buf) == 0){
+    		
+    		/* send the message to the server */
+		    serverlen = sizeof(serveraddr);
+		    n = sendto(sockfd, buf, strlen(buf), 0, &serveraddr, serverlen);
+		    if (n < 0) 
+		      error("ERROR in sendto");
+		    
+		    /* print the server's reply */
+		    n = recvfrom(sockfd, buf, strlen(buf), 0, &serveraddr, &serverlen);
+		    if (n < 0) 
+		      error("ERROR in recvfrom");
+		    printf("Echo from server: %s", buf);
+	    }
     }
-    while(inputValidation(buf) != 0);
-
-    /* send the message to the server */
-    serverlen = sizeof(serveraddr);
-    n = sendto(sockfd, buf, strlen(buf), 0, &serveraddr, serverlen);
-    if (n < 0) 
-      error("ERROR in sendto");
-    
-    /* print the server's reply */
-    n = recvfrom(sockfd, buf, strlen(buf), 0, &serveraddr, &serverlen);
-    if (n < 0) 
-      error("ERROR in recvfrom");
-    printf("Echo from server: %s", buf);
     return 0;
 }
