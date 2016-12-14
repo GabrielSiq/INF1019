@@ -33,13 +33,13 @@ void printHelp(){
 	printf("Olá, bem vindo ao nosso sistema de ajuda.\n");
 	printf("Utilizar nosso sistema de arquivos é bem simples. Basta digitar o comando desejado e os parâmetros corretos. As opções de comando e parâmetros estão detalhadas a seguir:\n\n");
 
-	printf("1- read => lê um numero de bytes de um determinado arquivo a partir de um offset. Também pode ser usada para criar um arquivo caso ele não exista.\n");
+	printf("1- read => lê um numero de bytes de um determinado arquivo a partir de um offset.\n");
 	printf("   Esqueleto: read path nrbytes offset\n");
 	printf("   Exemplo de uso: read /user/arquivo.txt 20 7\n\n");
 
-	printf("2- write => escreve um conteúdo em um determinado arquivo a partir de um offset. Pode ser usado para remover um arquivo ao enviar uma string (payload) vazia.\n");
-	printf("   Esqueleto: write path payload offset\n");
-	printf("   Exemplo de uso: write /user/arquivo.txt \"laranjasebananas\" 7\n\n");
+	printf("2- write => escreve um conteúdo em um determinado arquivo a partir de um offset. Pode ser usado para remover um arquivo ao enviar uma string (payload) vazia ou criar um arquivo caso ele nao exista.\n");
+	printf("   Esqueleto: write path payload nrbytes offset\n");
+	printf("   Exemplo de uso: write /user/arquivo.txt \"laranjasebananas\" 16 7\n\n");
 
 	printf("3- info => retorna informações sobre o arquivo escolhido.\n");
 	printf("   Esqueleto: info path\n");
@@ -84,6 +84,8 @@ void humanReadableToMachine(char * command){
 			command[i] = reserved[0];
 		i++;
 	}
+
+	command[i]='\0';
 	//printf("HtM:%s\n", command);
 }
 
@@ -160,8 +162,12 @@ int main(int argc, char **argv) {
     printf("Bem vindo ao nosso servidor de arquivos! Digite um comando ou digite \"help\" para obter ajuda ou \"quit\" para sair.\n");
 
     while(true){
-    	printf("Digite um comando: ");
-    	fgets(buf, BUFSIZE, stdin);
+     	printf("Digite um comando: ");
+    	scanf("%[^\n]1024s", buf);
+   		setbuf(stdin, NULL);
+
+
+    	//fgets(buf, BUFSIZE, stdin);
     	if(inputValidation(buf) == 0){
 
     		/* send the message to the server */
@@ -174,8 +180,13 @@ int main(int argc, char **argv) {
 		    n = recvfrom(sockfd, buf, BUFSIZE, 0, &serveraddr, &serverlen);
 		    if (n < 0) 
 		      error("ERROR in recvfrom");
+		  	
 		  	printf("Server: %s\n", buf);
-	    }
+
+		  	bzero(buf, BUFSIZE); // limpa a mensagem pra nao truncar mensagens anteriores
+			
+		  	
+		}
     }
     return 0;
 }
