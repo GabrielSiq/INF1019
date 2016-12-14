@@ -141,16 +141,16 @@ void printHelp(){
 	printf("   Exemplo de uso: read /user/arquivo.txt 20 7\n\n");
 
 	printf("2- write => escreve um conteúdo em um determinado arquivo a partir de um offset. Pode ser usado para remover um arquivo ao enviar uma string (payload) vazia ou criar um arquivo caso ele nao exista.\n");
-	printf("   Esqueleto: write path payload nrbytes offset\n");
-	printf("   Exemplo de uso: write /user/arquivo.txt \"laranjasebananas\" 16 7\n\n");
+	printf("   Esqueleto: write path payload nrbytes offset ownerperm otherperm\n");
+	printf("   Exemplo de uso: write /user/arquivo.txt \"laranjasebananas\" 16 7 0 1\n\n");
 
 	printf("3- info => retorna informações sobre o arquivo escolhido.\n");
 	printf("   Esqueleto: info path\n");
 	printf("   Exemplo de uso: info /user/arquivo.txt\n\n");
 
 	printf("4- mkdir => cria um novo subdiretório no local indicado.\n");
-	printf("   Esqueleto: mkdir path dirname\n");
-	printf("   Exemplo de uso: mkdir /user/ newfolder\n\n");
+	printf("   Esqueleto: mkdir path dirname ownerperm otherperm\n");
+	printf("   Exemplo de uso: mkdir /user/ newfolder 0 1\n\n");
 
 	printf("5- rm => remove o subdiretório especificado.\n");
 	printf("   Esqueleto: rm path dirname\n");
@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
 		    
 		    /* print the server's reply */
 		    receiveMessage(buf);
-		    
+
 		  	printf("Server: %s\n", buf);
 
 		  	bzero(buf, BUFSIZE); // limpa a mensagem pra nao truncar mensagens anteriores
