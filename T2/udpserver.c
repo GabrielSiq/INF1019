@@ -33,6 +33,8 @@ const char * existingUsers[] = {"user1", "user2", "user3", "user4", "user5", "us
 const int existingPasswords[] = {210723987853, 210723987854, 210723987854, 210723987855, 210723987856, 210723987854};
 const char * validationTokens[6];
 
+int currentUser;
+
 
 /*
  * error - wrapper for perror
@@ -320,6 +322,8 @@ int functionRouter (char *command)
 
 
   	mainCommand = params[0];
+
+  	currentUser = atoi(params[n-2];
 
   	if(strcmp(mainCommand, "login") != 0 && !validateUser(atoi(params[n-2]), params[n-1])){
 		strcpy(command, "Erro de validação do usuário.");
