@@ -28,6 +28,12 @@
 
 struct stat info={0};
 
+int numUsers = 6;
+const char * existingUsers[] = {"user1", "user2", "user3", "user4", "user5", "user6"};
+const int existingPasswords[] = {210723987853, 210723987854, 210723987854, 210723987855, 210723987856, 210723987854};
+const char * validationTokens[6];
+
+
 /*
  * error - wrapper for perror
  */
@@ -35,6 +41,49 @@ void error(char *msg) {
 	perror(msg);
 	exit(1);
 }
+
+int validateUser(int userId, char * validationToken){
+	if(strcmp(validationTokens[userId], validationToken) == 0){
+		return 1;
+	}
+	return 0;
+}
+
+void rand_str(char *dest, size_t length) {
+    char charset[] = "0123456789"
+                     "abcdefghijklmnopqrstuvwxyz"
+                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    while (length-- > 0) {
+        size_t index = (double) rand() / RAND_MAX * (sizeof charset - 1);
+        *dest++ = charset[index];
+    }
+    *dest = '\0';
+}
+
+char * logoutHandler(int userId, char * validationToken){
+	if(validateUser){
+		free(validationTokens[userId]);
+		printf("O usuário %s se deslogou.\n", existingUsers[userId]);
+		return "";
+	}
+}
+
+char * loginHandler(char * username, char * password){
+	char * buf = (char *) malloc(80 * sizeof(char));
+	for(int i = 0; i < numUsers; i++){
+		if(strcmp(username, existingUsers[i]) == 0){
+			if(atoi(password) == existingPasswords[i]){
+				validationTokens[i] = (char *) malloc(12 * sizeof(char));
+				rand_str(validationTokens[i], 12);
+				sprintf(buf, "login|%d|%s", i, validationTokens[i]);
+				return buf;
+			}
+		}
+	}
+	return "erro|Login ou senha inválidos";
+}
+
 /* Extrai de um path o nome do arquivo txt */
 char *getName(char *p)
 {
@@ -74,7 +123,6 @@ char * readFile(char * path, int nrbytes, int offset)
   if(fd == -1)
   {
     return "\nErro no comando 'read', verifique se o arquivo existe.\n";
-    
   }
 
   tam = lseek(fd, 0, SEEK_END);
@@ -166,7 +214,7 @@ char * makdir(char * path, char * dirname)// Cria um subdiretório no path indic
 {
   char mk[BUFSIZE];
 
-  printf("\n\nOperacao: criar um diretório de nome >>%s<< em %s.\n", dirname, path);
+  printf("\n\nOperação: criar um diretório de nome >>%s<< em %s.\n", dirname, path);
 
   strcpy(mk, path);
   strcat(mk, "/");
@@ -191,7 +239,7 @@ char * rm(char * path, char * dirname) // Remove um dado diretório
   strcpy(mk, path);
   strcat(mk, dirname);
 
-  printf("\n\nOperacao: remover o diretório de nome >>%s<< em %s.\n", dirname, path);
+  printf("\n\nOperação: remover o diretório de nome >>%s<< em %s.\n", dirname, path);
   
   if( (rmdir(mk)) == -1)
   {
@@ -239,14 +287,9 @@ char * list(char * path) // Lista todos os arquivos e diretórios a partir de um
   return "Você chamou a função que lista arquivos no diretório";
 }
 
-
-//empty string
-
 /* Routes the message to the appropriate function depending on the base command */
 /* Base command validation is done exclusively client-side (meaning, not here) 
    On the other hand, parameter validation is done exclusively server side (meaning, here)*/ 
-
-
 
 int functionRouter (char *command) 
 {
@@ -289,6 +332,12 @@ int functionRouter (char *command)
 	}
 	else if(strcmp(mainCommand, "list") == 0 && n == 2){
 		strcpy(command, list(params[1]));
+	}
+	else if(strcmp(mainCommand, "login") == 0 && n == 3){
+		strcpy(command, loginHandler(params[1], params[2]));
+	}
+	else if(strcmp(mainCommand, "quit") == 0 && n == 3){
+		strcpy(command, logoutHandler(atoi(params[1]), params[2]));
 	}
 	else{
 		strcpy(command, "Erro nos parâmetros. Por favor, verifique a documentação dos comandos.");

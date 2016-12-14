@@ -5,15 +5,25 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h> 
+#include <netdb.h>
+#include <termios.h>
 
 #define BUFSIZE 1024
 #define SINGLEWORDSIZE 50
 #define true 1
 #define false 0
 
+int isLoggedIn = false;
+
+int serverlen, sockfd;
+struct sockaddr_in serveraddr;
+
+
 const char * reserved = "|";
 const char * existingCommands[] = {"read", "write", "info", "mkdir", "rm", "list", NULL};
+
+char validationToken[12]; //session token
+int userId = 1; //user id
 
 /* 
  * error - wrapper for perror
@@ -23,16 +33,96 @@ void error(char *msg) {
     exit(0);
 }
 
+void receiveMessage(char * message){
+	int n;
+	n = recvfrom(sockfd, message, BUFSIZE, 0, &serveraddr, &serverlen);
+	if (n < 0) 
+		error("ERROR in recvfrom");
+}
+
+void sendMessage(char * message){
+	int n;
+	/* send the message to the server */
+    int serverlen = sizeof(serveraddr);
+    n = sendto(sockfd, message, strlen(message), 0, &serveraddr, serverlen);
+    if (n < 0) 
+      error("ERROR in sendto");    
+}
+
+unsigned long hash(unsigned char *str)
+    {
+        unsigned long hash = 5381;
+        int c;
+
+        while (c = *str++)
+            hash = ((hash << 5) + hash) + c;
+
+        return hash;
+    }
+
+void userLogin(){
+	char username[80];
+	char password[80];
+	char buf[BUFSIZE];
+	char * params[10];
+	int n = 0;
+
+	printf("Usuário: ");
+	scanf(" %[^\n]1024s", username);
+	if(strcmp(username, "quit") == 0){
+		quit();
+	}
+	printf("Senha: ");
+	scanf(" %[^\n]1024s", password);
+	sprintf(buf, "login|%s|%ld", username, hash(password));
+	sendMessage(buf);
+	bzero(buf, BUFSIZE);
+	receiveMessage(buf);
+
+	for (char * p = strtok(buf, "|"); p; p = strtok(NULL, "|"))
+	{
+	    if (p == NULL)
+	    {
+	        break;
+	    }
+	    params[n++] = p;
+	}
+
+	if(strcmp(params[0], "login") == 0){
+		printf("Login bem sucedido. Bem vindo %s!\n", username);
+		userId = atoi(params[1]);
+		strcpy(validationToken, params[2]);
+		isLoggedIn = true;
+	}
+	else if(strcmp(params[0], "erro") == 0){
+		printf("Usuário ou senha incorretos. Tente novamente ou crie uma conta.\n", username);
+	}
+}
+
+/* Gets input from user */
+void getInput(char * buf){
+	printf("Digite um comando: ");
+    scanf(" %[^\n]1024s", buf);
+   	setbuf(stdin, NULL);
+}
+
 /* Exits program */
 void quit(){
+	char buf[BUFSIZE];
+
+	// Sends logout request to deactivate session token
+	if(isLoggedIn == true){
+		sprintf(buf, "quit|%d|%s", userId, validationToken);
+		sendMessage(buf);
+	}
 	printf("\nAté breve!\n\n");
-printf("	  /)─―ヘ\n");
-printf("　　　＿／　　　＼\n");
-printf("　 ／　　　　●　 ●丶\n");
-printf("　｜　　　　　  ▼　|\n");
-printf("　｜　　　　　　亠ノ\n");
-printf("　 U￣U￣￣￣￣U￣\n");
-exit(1);
+	printf("	  /)─―ヘ\n");
+	printf("　　　＿／　　　＼\n");
+	printf("　 ／　　　　●　 ●丶\n");
+	printf("　｜　　　　　  ▼　|\n");
+	printf("　｜　　　　　　亠ノ\n");
+	printf("　 U￣U￣￣￣￣U￣\n");
+	exit(1);
 
 }
 
@@ -131,9 +221,7 @@ char * inputValidation(char * command){
 }
 
 int main(int argc, char **argv) {
-    int sockfd, portno, n;
-    int serverlen;
-    struct sockaddr_in serveraddr;
+    int portno, n;
     struct hostent *server;
     char *hostname;
     char buf[BUFSIZE];
@@ -167,27 +255,24 @@ int main(int argc, char **argv) {
 
     /* get a message from the user */
     bzero(buf, BUFSIZE);
+    printf("Bem vindo ao nosso servidor de arquivos! Digite seu usuário e senha ou \"quit\" para sair.\n");
+    while(isLoggedIn == false){
+    	userLogin(buf);
+    }
+
     printf("Bem vindo ao nosso servidor de arquivos! Digite um comando ou digite \"help\" para obter ajuda ou \"quit\" para sair.\n");
 
     while(true){
-     	printf("Digite um comando: ");
-    	scanf("%[^\n]1024s", buf);
-   		setbuf(stdin, NULL);
-
+     	getInput(buf);
 
     	//fgets(buf, BUFSIZE, stdin);
     	if(inputValidation(buf) == 0){
 
     		/* send the message to the server */
-		    serverlen = sizeof(serveraddr);
-		    n = sendto(sockfd, buf, strlen(buf), 0, &serveraddr, serverlen);
-		    if (n < 0) 
-		      error("ERROR in sendto");
+		    sendMessage(buf);
 		    
 		    /* print the server's reply */
-		    n = recvfrom(sockfd, buf, BUFSIZE, 0, &serveraddr, &serverlen);
-		    if (n < 0) 
-		      error("ERROR in recvfrom");
+		    receiveMessage(buf);
 		  	
 		  	printf("Server: %s\n", buf);
 
