@@ -33,6 +33,7 @@ void error(char *msg) {
     exit(0);
 }
 
+/* Receives message from server */
 void receiveMessage(char * message){
 	int n;
 	n = recvfrom(sockfd, message, BUFSIZE, 0, &serveraddr, &serverlen);
@@ -40,6 +41,7 @@ void receiveMessage(char * message){
 		error("ERROR in recvfrom");
 }
 
+/* Sends message to server */
 void sendMessage(char * message){
 	int n;
 	/* send the message to the server */
@@ -49,6 +51,7 @@ void sendMessage(char * message){
       error("ERROR in sendto");    
 }
 
+/* djb2 hash */
 unsigned long hash(unsigned char *str)
     {
         unsigned long hash = 5381;
@@ -60,6 +63,7 @@ unsigned long hash(unsigned char *str)
         return hash;
     }
 
+/* Handles our simple login emulation */
 void userLogin(){
 	char username[80];
 	char password[80];

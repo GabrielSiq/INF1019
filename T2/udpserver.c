@@ -42,6 +42,7 @@ void error(char *msg) {
 	exit(1);
 }
 
+/* Validates user session token */
 int validateUser(int userId, char * validationToken){
 	if(strcmp(validationTokens[userId], validationToken) == 0){
 		return 1;
@@ -49,6 +50,7 @@ int validateUser(int userId, char * validationToken){
 	return 0;
 }
 
+/* Generates a random string token */
 void rand_str(char *dest, size_t length) {
     char charset[] = "0123456789"
                      "abcdefghijklmnopqrstuvwxyz"
@@ -61,6 +63,7 @@ void rand_str(char *dest, size_t length) {
     *dest = '\0';
 }
 
+/* Handles user logout */
 char * logoutHandler(int userId, char * validationToken){
 	if(validateUser){
 		free(validationTokens[userId]);
@@ -69,6 +72,7 @@ char * logoutHandler(int userId, char * validationToken){
 	}
 }
 
+/* Handles user login */
 char * loginHandler(char * username, char * password){
 	char * buf = (char *) malloc(80 * sizeof(char));
 	for(int i = 0; i < numUsers; i++){
@@ -184,7 +188,8 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset)
   return "Você chamou a função que escreve path arquivos";
 }
 
-char * fileInfo(char * path)// Extrai as informações de um arquivo ou pasta
+/* Extrai as informações de um arquivo ou pasta */
+char * fileInfo(char * path)
 {
   stat(path, &info);
   struct passwd *pw;
@@ -210,7 +215,8 @@ char * fileInfo(char * path)// Extrai as informações de um arquivo ou pasta
   return "Você chamou a função que dá informações sobre arquivos";
 }
 
-char * makdir(char * path, char * dirname)// Cria um subdiretório no path indicado
+/* Cria um subdiretório no path indicado */
+char * makdir(char * path, char * dirname)
 {
   char mk[BUFSIZE];
 
@@ -232,7 +238,8 @@ char * makdir(char * path, char * dirname)// Cria um subdiretório no path indic
   return "Você chamou a função que cria diretórios";
 }
 
-char * rm(char * path, char * dirname) // Remove um dado diretório
+/* Remove um dado diretório */
+char * rm(char * path, char * dirname) 
 {
   char mk[BUFSIZE];
 
@@ -249,7 +256,8 @@ char * rm(char * path, char * dirname) // Remove um dado diretório
   return "Você chamou a função que remove diretórios";
 }
 
-char * list(char * path) // Lista todos os arquivos e diretórios a partir de um dado path
+/* Lista todos os arquivos e diretórios a partir de um dado path */
+char * list(char * path)
 {
   DIR* dir; 
   struct dirent* entrada; 
@@ -309,10 +317,6 @@ int functionRouter (char *command)
 	    printf("%s ", params[n-1]);
 	}
 
-
-  	//printf("\n Parametros: %s\n",params[0]); Só pra checar como estavam chegando
-  	//printf("\n Parametros: %s\n",params[1]);
-
   	mainCommand = params[0];
 	
 	if(strcmp(mainCommand, "read") == 0 && n == 4){
@@ -359,9 +363,6 @@ int main(int argc, char **argv)
   char *hostaddrp; /* dotted decimal host addr string */
   int optval; /* flag value for setsockopt */
   int n; /* message byte size */
-	
-  //char name[BUFSIZE];   // name of the file received from client
-  //int cmd;              // cmd received from client
 
   /* 
    * check command line arguments 
