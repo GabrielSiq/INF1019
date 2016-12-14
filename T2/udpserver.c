@@ -33,50 +33,48 @@ void error(char *msg) {
 	perror(msg);
 	exit(1);
 }
-
-char *getName(char *p)// Extrai de um path o nome do arquivo txt
+/* Extrai de um path o nome do arquivo txt */
+char *getName(char *p)
 {
   int i;
 
-  for(i=strlen(p);p[i]!='/';i--)
+  for(i = strlen(p); p[i] != '/'; i--)
   {}
 
-  return p+i+1;
+  return p + i + 1;
 
 }
-
-char * readFile(char * path, int nrbytes, int offset) // Lê uma quantidade de bytes de um arquivo a partir de um offset
+/* Lê uma quantidade de bytes de um arquivo a partir de um offset */
+char * readFile(char * path, int nrbytes, int offset)
 {
-  int fd,param,tam;
+  int fd, param, tam;
   char payload[BUFSIZE];
   
   printf("\n\nOperacao: leitura de %d bytes do arquivo >>%s<< a partir do offset %d.\n", nrbytes, getName(path), offset );
   
-  fd=open(path,0,PERALL);// acusa erro caso nao exista
+  fd = open(path, 0, PERALL);// acusa erro caso nao exista
 
-  if(fd==-1)
+  if(fd == -1)
   {
     return "\nErro no comando 'read', verifique se o arquivo existe.\n";
     
   }
 
-  tam=lseek(fd,0,SEEK_END);
+  tam = lseek(fd, 0, SEEK_END);
 
-  if(nrbytes>tam) // testa se nrbytes eh maior que o arquivo
-  {}
-    else
-      tam=nrbytes;
+  if(nrbytes <= tam) // testa se nrbytes eh maior que o arquivo
+    tam = nrbytes;
 
-  lseek(fd,offset,SEEK_SET);
+  lseek(fd, offset, SEEK_SET);
 
-  param=read(fd,payload,tam);
+  param = read(fd, payload, tam);
 
-  payload[tam]='\0';
+  payload[tam] = '\0';
 
   if(!param)
   { 
     printf("\nLeitura vazia, se for o caso, verifique offset\n");
-    *payload='\0';
+    *payload = '\0';
     close(fd);
     return "Você chamou a função que lê arquivos.";
   }
@@ -84,37 +82,36 @@ char * readFile(char * path, int nrbytes, int offset) // Lê uma quantidade de b
 
   close(fd);
 
-  printf("\nString lida:%s\n",payload);
+  printf("\nString lida:%s\n", payload);
 
   return "Você chamou a função que lê arquivos.";
 }
 
-char * writeFile(char * path, char * payload, int nrbytes,int offset) //Escreve uma quantidade de bytes de um arquivo a partir de um offset
+/* Escreve uma quantidade de bytes de um arquivo a partir de um offset */
+char * writeFile(char * path, char * payload, int nrbytes, int offset)
 { 
   int fd;
 
   printf("\n\nOperacao: escrita da string >>%s<< no arquivo >>%s<< a partir do offset %d.\n", payload, getName(path), offset);
 
 
-  if(nrbytes==0)
+  if(nrbytes == 0)
   {
     unlink(path);
     return "Você chamou a função que escreve em arquivos com nrbytes=0, seu arquivo foi apagado";
   }
 
-  fd=open(path,O_CREAT|O_RDWR,PERALL);// cria se nao existir e seta a permissao libero geral
+  fd = open(path, O_CREAT|O_RDWR, PERALL);// cria se nao existir e seta a permissao libero geral
 
-  if(fd==-1)
+  if(fd == -1)
   {
       return "\nErro no comando 'write', parametros inválidos\n";
   }
 
-  if(offset> (lseek(fd,0,SEEK_END))) // testa se offset eh maior que o arquivo
-  {}
-    else
-      lseek(fd,offset,SEEK_SET);
+  if(offset <= (lseek(fd, 0, SEEK_END))) // testa se offset eh maior que o arquivo
+    lseek(fd, offset, SEEK_SET);
 
-  write(fd,payload,nrbytes);
+  write(fd, payload, nrbytes);
 
 
   close(fd);
@@ -124,20 +121,20 @@ char * writeFile(char * path, char * payload, int nrbytes,int offset) //Escreve 
 
 char * fileInfo(char * path)// Extrai as informações de um arquivo ou pasta
 {
-  stat(path,&info);
+  stat(path, &info);
 
-  printf("\n\nOperacao: extracao das informacoes sobre o path passado %s.\n",path);
+  printf("\n\nOperacao: extracao das informacoes sobre o path passado %s.\n", path);
 
-  if((info.st_mode & S_IFMT) ==S_IFDIR)
+  if((info.st_mode & S_IFMT) == S_IFDIR)
   {
     printf("\nVoce esta consultado as informações sobre uma pasta\n");
-    printf("\nOwnwer: %ld e Group: %ld\n",(long)info.st_uid,(long)info.st_gid);
+    printf("\nOwnwer: %ld e Group: %ld\n", (long) info.st_uid, (long) info.st_gid);
     return "Você chamou a função que dá informações sobre arquivos";
   }
 
-  printf("\nInformações do arquivo: %s\n",getName(path));
-  printf("Ownwer: %ld e Group: %ld \n",(long)info.st_uid,(long)info.st_gid);
-  printf("Tamanho: %ld bytes\n\n",(long)info.st_size);
+  printf("\nInformações do arquivo: %s\n", getName(path));
+  printf("Ownwer: %ld e Group: %ld \n", (long) info.st_uid, (long) info.st_gid);
+  printf("Tamanho: %ld bytes\n\n", (long) info.st_size);
 
 
   return "Você chamou a função que dá informações sobre arquivos";
@@ -149,13 +146,13 @@ char * makdir(char * path, char * dirname)// Cria um subdiretório no path indic
 
   printf("\n\nOperacao: criar um diretório de nome >>%s<< em %s.\n", dirname, path);
 
-  strcpy(mk,path);
-  strcat(mk,"/");
-  strcat(mk,dirname);
+  strcpy(mk, path);
+  strcat(mk, "/");
+  strcat(mk, dirname);
 
-  if((mkdir(mk,PERALL))==-1)
+  if((mkdir(mk, PERALL)) == -1)
   {
-    printf("\nErro na criacao do diretorio >>%s<<, verifique.\n",dirname);
+    printf("\nErro na criacao do diretorio >>%s<<, verifique.\n", dirname);
     return 0;
   }
 
@@ -169,12 +166,12 @@ char * rm(char * path, char * dirname) // Remove um dado diretório
 {
   char mk[BUFSIZE];
 
-  strcpy(mk,path);
-  strcat(mk,dirname);
+  strcpy(mk, path);
+  strcat(mk, dirname);
 
   printf("\n\nOperacao: remover o diretório de nome >>%s<< em %s.\n", dirname, path);
   
-  if( (rmdir(mk))==-1)
+  if( (rmdir(mk)) == -1)
   {
     return "\nErro ao tentar remover o diretório, verifique se o mesmo esta vazio\n";
   }
@@ -196,19 +193,19 @@ char * list(char * path) // Lista todos os arquivos e diretórios a partir de um
     return "\nErro ao tentar listar no path fornecido, verifique \n."; 
   } 
 
-   entrada = readdir( dir); 
+  entrada = readdir( dir); 
 
   while( entrada)
   {   
    
     if (entrada->d_type == ISFILE)
     {
-      if(entrada->d_name[0]!='.')
-        printf("\nA: %s",entrada->d_name);
+      if(entrada->d_name[0] != '.')
+        printf("\nA: %s", entrada->d_name);
     }
     else
-      if(entrada->d_type == ISDIR && (strcmp(entrada->d_name, ".")!=0 && strcmp(entrada->d_name, "..")!=0))
-        printf("\nD: %s",entrada->d_name);
+      if(entrada->d_type == ISDIR && (strcmp(entrada->d_name, ".")!=0 && strcmp(entrada->d_name, "..") != 0))
+        printf("\nD: %s", entrada->d_name);
 
     entrada = readdir( dir);  
   }
@@ -248,10 +245,10 @@ int functionRouter (char *command)
 	}
 
 
-  //printf("\n Parametros: %s\n",params[0]); Só pra checar como estavam chegando
-  //printf("\n Parametros: %s\n",params[1]);
+  	//printf("\n Parametros: %s\n",params[0]); Só pra checar como estavam chegando
+  	//printf("\n Parametros: %s\n",params[1]);
 
-  mainCommand = params[0];
+  	mainCommand = params[0];
 	
 	if(strcmp(mainCommand, "read") == 0 && n == 4){
 		strcpy(command, readFile(params[1], atoi(params[2]), atoi(params[3])));
@@ -372,8 +369,5 @@ int main(int argc, char **argv)
   	n = sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *) &clientaddr, clientlen);
   	if (n < 0) 
   		error("ERROR in sendto");
-
-    
-
   }
 }

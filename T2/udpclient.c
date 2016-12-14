@@ -1,7 +1,3 @@
-/* 
- * udpclient.c - A simple UDP client
- * usage: udpclient <host> <port>
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +21,19 @@ const char * existingCommands[] = {"read", "write", "info", "mkdir", "rm", "list
 void error(char *msg) {
     perror(msg);
     exit(0);
+}
+
+/* Exits program */
+void quit(){
+	printf("\nAté breve!\n\n");
+printf("	  /)─―ヘ\n");
+printf("　　　＿／　　　＼\n");
+printf("　 ／　　　　●　 ●丶\n");
+printf("　｜　　　　　  ▼　|\n");
+printf("　｜　　　　　　亠ノ\n");
+printf("　 U￣U￣￣￣￣U￣\n");
+exit(1);
+
 }
 
 /* Prints our friendly help page */
@@ -113,8 +122,7 @@ char * inputValidation(char * command){
 		return -1;
 	}
 	else if(strcmp(mainCommand, "quit") == 0){
-		printf("Até breve!\n");
-		exit(0);
+		quit();
 	}
 	else{
 		printf("Não foi reconhecido um comando válido. Digite \"help\" se precisar de ajuda\n");
@@ -184,8 +192,6 @@ int main(int argc, char **argv) {
 		  	printf("Server: %s\n", buf);
 
 		  	bzero(buf, BUFSIZE); // limpa a mensagem pra nao truncar mensagens anteriores
-			
-		  	
 		}
     }
     return 0;
