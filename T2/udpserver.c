@@ -323,12 +323,16 @@ int functionRouter (char *command)
 
   	mainCommand = params[0];
 
-  	currentUser = atoi(params[n-2];
-
-  	if(strcmp(mainCommand, "login") != 0 && !validateUser(atoi(params[n-2]), params[n-1])){
+  	if(strcmp(mainCommand, "login") == 0 && n == 3){
+		strcpy(command, loginHandler(params[1], params[2]));
+		return 0;
+	}
+  	else if(!validateUser(atoi(params[n-2]), params[n-1])){
 		strcpy(command, "Erro de validação do usuário.");
 		return -2;
 	}
+
+	currentUser = atoi(params[n-2]);
 	
 	if(strcmp(mainCommand, "read") == 0 && n == 6){
 		strcpy(command, readFile(params[1], atoi(params[2]), atoi(params[3])));
@@ -340,16 +344,13 @@ int functionRouter (char *command)
 		strcpy(command, fileInfo(params[1]));
 	}
 	else if(strcmp(mainCommand, "mkdir") == 0 && n == 7){
-		strcpy(command, makdir(params[1], params[2]));
+		strcpy(command, makdir(params[1], params[2], atoi(params[3]),atoi(params[4])));
 	}
 	else if(strcmp(mainCommand, "rm") == 0 && n == 5){
 		strcpy(command, rm(params[1], params[2]));
 	}
 	else if(strcmp(mainCommand, "list") == 0 && n == 5){
 		strcpy(command, list(params[1]));
-	}
-	else if(strcmp(mainCommand, "login") == 0 && n == 3){
-		strcpy(command, loginHandler(params[1], params[2]));
 	}
 	else if(strcmp(mainCommand, "quit") == 0 && n == 5){
 		strcpy(command, logoutHandler(atoi(params[1]), params[2]));
