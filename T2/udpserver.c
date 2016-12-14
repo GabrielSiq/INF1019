@@ -18,6 +18,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pwd.h>
+#include <grp.h>
 
 #define BUFSIZE 1024
 #define PERALL 0777
@@ -47,10 +49,25 @@ char *getName(char *p)
 /* Lê uma quantidade de bytes de um arquivo a partir de um offset */
 char * readFile(char * path, int nrbytes, int offset)
 {
-  int fd, param, tam;
-  char payload[BUFSIZE];
+  int fd, param, tam, type;
+  char payload[BUFSIZE], * str;
+  struct stat path_stat;
+  struct passwd * pw;
   
   printf("\n\nOperacao: leitura de %d bytes do arquivo >>%s<< a partir do offset %d.\n", nrbytes, getName(path), offset );
+
+  stat(path, &path_stat);
+  if(!S_ISREG(path_stat.st_mode)){
+  	if(S_ISDIR(path_stat.st_mode)){
+  		str = malloc(100);
+  		pw = getpwuid(path_stat.st_uid);
+  		sprintf(str, "\nO path passado corresponde a um diretório, cujo autor é %s.\n", pw->pw_name);
+  		return str;
+  	}
+  	else{
+  		return "\nO path passado não contém um arquivo.\n";
+  	}
+  }
   
   fd = open(path, 0, PERALL);// acusa erro caso nao exista
 
@@ -122,18 +139,23 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset)
 char * fileInfo(char * path)// Extrai as informações de um arquivo ou pasta
 {
   stat(path, &info);
+  struct passwd *pw;
+  struct group * gr;
 
   printf("\n\nOperacao: extracao das informacoes sobre o path passado %s.\n", path);
+
+  pw = getpwuid(info.st_uid);
+  gr = getgrgid(info.st_gid);
 
   if((info.st_mode & S_IFMT) == S_IFDIR)
   {
     printf("\nVoce esta consultado as informações sobre uma pasta\n");
-    printf("\nOwnwer: %ld e Group: %ld\n", (long) info.st_uid, (long) info.st_gid);
+    printf("\nOwnwer: %s e Group: %s\n", pw->pw_name, gr->gr_name);
     return "Você chamou a função que dá informações sobre arquivos";
   }
 
   printf("\nInformações do arquivo: %s\n", getName(path));
-  printf("Ownwer: %ld e Group: %ld \n", (long) info.st_uid, (long) info.st_gid);
+  printf("Ownwer: %s e Group: %s \n", pw->pw_name, gr->gr_name);
   printf("Tamanho: %ld bytes\n\n", (long) info.st_size);
 
 
