@@ -189,7 +189,10 @@ void humanReadableToMachine(char * command){
 	}
 
 	command[i]='\0';
-	//printf("HtM:%s\n", command);
+	if(isLoggedIn == true){
+		sprintf(command, "%s|%d|%s", command, userId, validationToken);
+	}
+	printf("HtM:%s\n", command);
 }
 
 /* Does basic checks on the input, preparing to send to the server */
@@ -277,7 +280,7 @@ int main(int argc, char **argv) {
 		    
 		    /* print the server's reply */
 		    receiveMessage(buf);
-		  	
+		    
 		  	printf("Server: %s\n", buf);
 
 		  	bzero(buf, BUFSIZE); // limpa a mensagem pra nao truncar mensagens anteriores
