@@ -155,7 +155,7 @@ char * fileInfo(char * path)// Extrai as informações de um arquivo ou pasta
   }
 
   printf("\nInformações do arquivo: %s\n", getName(path));
-  printf("Ownwer: %s e Group: %s \n", pw->pw_name, gr->gr_name);
+  printf("Owner: %s e Group: %s \n", pw->pw_name, gr->gr_name);
   printf("Tamanho: %ld bytes\n\n", (long) info.st_size);
 
 
