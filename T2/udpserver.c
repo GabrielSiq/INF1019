@@ -231,14 +231,14 @@ void createFilePermission(char * path, int ownerPerm, int otherPerm){
 int checkFilePermission(char * path){
 	int fd;
 	char * base, * basec, * dirc, * dname;
-  	char hidden[80], hiddenPath[80], buffer[10];
+  char hidden[80], hiddenPath[80], buffer[10];
 
-  	basec = strdup(path);
-  	base = basename(basec);
-  	dirc = strdup(path);
-  	dname = dirname(dirc);
+  basec = strdup(path);
+  base = basename(basec);
+  dirc = strdup(path);
+  dname = dirname(dirc);
 
-  	sprintf(hidden, ".%s", base);
+  sprintf(hidden, ".%s", base);
 	sprintf(hiddenPath, "%s/%s", dname, hidden);
 	fd = open(hiddenPath, O_CREAT|O_RDWR, PERALL);
 
@@ -255,12 +255,12 @@ int checkFilePermission(char * path){
 	return atoi(buffer);
 }
 
-int checkDirPermission(char * path, char * dirname){
+int checkDirPermission(char * path, char * dirname, char * permFile){
 	char hidden[80], hiddenPath[80], buffer[10];
 	int fd;
 
 	sprintf(hidden, ".%s", dirname);
-  	sprintf(hiddenPath, "%s/%s", path, hidden);
+  sprintf(hiddenPath, "%s/%s", path, hidden);
   	fd = open(hiddenPath, O_CREAT|O_RDWR, PERALL);
   	read(fd, buffer, 1);
 	if(atoi(buffer) != currentUser){
@@ -270,8 +270,8 @@ int checkDirPermission(char * path, char * dirname){
 		lseek(fd, 2, SEEK_SET);
 	}
 	read(fd, buffer, 1);
-	printf("%s\n", buffer);
 	close(fd);
+  strcpy(permFile, hiddenPath);
 	return atoi(buffer);
 }
 
@@ -283,19 +283,19 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset, int owner
   printf("\n\nOperacao: escrita da string >>%s<< no arquivo >>%s<< a partir do offset %d.\n", payload, getName(path), offset);
 
 
+  if( access( path, F_OK ) == -1 ) {
+    createFilePermission(path, ownerPerm, otherPerm);
+  }
+  else{
+    if(!checkFilePermission(path)){
+      return erros("Você não tem permissão para escrever neste arquivo.");
+    }
+  }
+
   if(nrbytes == 0)
   {
     unlink(path);
     return writeMachinetoHuman("Você chamou a função que escreve em arquivos com nrbytes=0, seu arquivo foi apagado");
-  }
-
-  if( access( path, F_OK ) == -1 ) {
-  	createFilePermission(path, ownerPerm, otherPerm);
-  }
-  else{
-  	if(!checkFilePermission(path)){
-  		return erros("Você não tem permissão para escrever neste arquivo.");
-  	}
   }
 
   fd = open(path, O_CREAT|O_RDWR, PERALL);// cria se nao existir e seta a permissao libero geral
@@ -379,13 +379,14 @@ char * makdir(char * path, char * dirname, int ownerPerm, int otherPerm)
 char * rm(char * path, char * dirname) 
 {
   char mk[BUFSIZE];
+  char permFile[80];
 
   strcpy(mk, path);
   strcat(mk, dirname);
 
   printf("\n\nOperação: remover o diretório de nome >>%s<< em %s.\n", dirname, path);
 
-  if(!checkDirPermission(path, dirname)){
+  if(!checkDirPermission(path, dirname, permFile)){
   		return erros("Você não tem permissão para remover este diretório.");
   }
   
@@ -393,6 +394,8 @@ char * rm(char * path, char * dirname)
   {
     return erros("Erro ao tentar remover o diretório, verifique se o mesmo esta vazio");
   }
+
+  unlink(permFile);
 
   sprintf(mk,"Diretório removido, novo path: %s.",path);
 

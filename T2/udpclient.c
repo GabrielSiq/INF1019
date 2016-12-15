@@ -48,7 +48,7 @@ void sendMessage(char * message){
     int serverlen = sizeof(serveraddr);
     n = sendto(sockfd, message, strlen(message), 0, &serveraddr, serverlen);
     if (n < 0) 
-      error("ERROR in sendto");    
+      error("ERROR in sendto");
 }
 
 /* djb2 hash */
@@ -78,7 +78,9 @@ void userLogin(){
 	}
 	printf("Senha: ");
 	scanf(" %[^\n]1024s", password);
+
 	sprintf(buf, "login|%s|%ld", username, hash(password));
+
 	sendMessage(buf);
 	bzero(buf, BUFSIZE);
 	receiveMessage(buf);
@@ -276,8 +278,8 @@ int main(int argc, char **argv) {
     	if(inputValidation(buf) == 0){
 
     		/* send the message to the server */
-		    sendMessage(buf);
-		    
+		    sendMessage(buf); 
+		    bzero(buf, BUFSIZE);		    
 		    /* print the server's reply */
 		    receiveMessage(buf);
 
