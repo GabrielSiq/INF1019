@@ -228,7 +228,7 @@ void createFilePermission(char * path, int ownerPerm, int otherPerm){
 	close(fd);
 }
 
-int checkFilePermission(char * path){
+int checkFilePermission(char * path, char * permFile){
 	int fd;
 	char * base, * basec, * dirc, * dname;
   char hidden[80], hiddenPath[80], buffer[10];
@@ -250,8 +250,8 @@ int checkFilePermission(char * path){
 		lseek(fd, 2, SEEK_SET);
 	}
 	read(fd, buffer, 1);
-	printf("%s\n", buffer);
 	close(fd);
+  strcpy(permFile, hiddenPath);
 	return atoi(buffer);
 }
 
@@ -279,6 +279,7 @@ int checkDirPermission(char * path, char * dirname, char * permFile){
 char * writeFile(char * path, char * payload, int nrbytes, int offset, int ownerPerm, int otherPerm)
 { 
   int fd;
+  char permFile[80];
   
   printf("\n\nOperacao: escrita da string >>%s<< no arquivo >>%s<< a partir do offset %d.\n", payload, getName(path), offset);
 
@@ -287,7 +288,7 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset, int owner
     createFilePermission(path, ownerPerm, otherPerm);
   }
   else{
-    if(!checkFilePermission(path)){
+    if(!checkFilePermission(path, permFile)){
       return erros("Você não tem permissão para escrever neste arquivo.");
     }
   }
@@ -295,6 +296,7 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset, int owner
   if(nrbytes == 0)
   {
     unlink(path);
+    unlink(permFile);
     return writeMachinetoHuman("Você chamou a função que escreve em arquivos com nrbytes=0, seu arquivo foi apagado");
   }
 
