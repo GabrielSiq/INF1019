@@ -2,18 +2,95 @@
  * udpserver.c - A simple UDP echo server 
  * usage: udpserver <port>
  */
-
 #include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <netdb.h>
+#include <stdlib.h> 
 #include <sys/types.h> 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <errno.h>
+#include <dirent.h>
+#include <time.h>
+#include <sys/xattr.h>
+#include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pwd.h>
+#include <grp.h>
 
 #define BUFSIZE 1024
+#define PERALL 0777
+#define ISDIR   0x4
+#define ISFILE  0x8
+#define MAX 65000 
+
+struct stat info={0};
+
+int numUsers = 6;
+const char * existingUsers[] = {"user1", "user2", "user3", "user4", "user5", "user6"};
+const int existingPasswords[] = {210723987853, 210723987854, 210723987854, 210723987855, 210723987856, 210723987854};
+const char * validationTokens[6];
+int currentUser;
+
+const char * reserved = "|";
+char *req;
+
+char *readMachinetoHuman (char *buf, int tam)
+{
+  bzero(req, MAX);
+
+  sprintf(req,"read%s%s%s%i",reserved,buf,reserved,tam); 
+  
+  return req;
+}
+
+char *writeMachinetoHuman (char *buf)
+{
+  bzero(req, MAX); 
+  
+  sprintf(req,"write%s%s",reserved,buf);  
+  
+  return req;
+}
+
+char *infoMachinetoHuman (char *buf1,char *buf2,char *buf3)
+{
+  bzero(req, MAX);
+
+  sprintf(req,"info%s%s%s%s%s%s",reserved,buf1,reserved,buf2,reserved,buf3); 
+   
+  return req;
+}
+
+char *mkdirMachinetoHuman(char *buf)
+{
+  bzero(req, MAX); 
+  
+  sprintf(req,"mkdir%s%s",reserved,buf);  
+  
+  return req;
+}
+
+char *rmMachinetoHuman(char *buf)
+{
+  bzero(req, MAX); 
+  
+  sprintf(req,"rm%s%s",reserved,buf);  
+  
+  return req;
+}
+
+char *erros(char *buf)
+{
+  bzero(req, MAX);
+
+  sprintf(req,"erro%s%s",reserved,buf);  
+
+  return req;
+}
 
 /*
  * error - wrapper for perror
@@ -23,49 +100,289 @@ void error(char *msg) {
 	exit(1);
 }
 
-char * readFile(char * path, int nrbytes, int offset){
-	printf("Devo ler %d bytes do arquivo %s a partir do offset %d.\n", nrbytes, path, offset );
-	return "Você chamou a função que lê arquivos";
+/* Validates user session token */
+int validateUser(int userId, char * validationToken){
+	if(strcmp(validationTokens[userId], validationToken) == 0){
+		return 1;
+	}
+	return 0;
 }
 
-char * writeFile(char * path, char * payload, int offset){
-	printf("Devo escrever a string %s no arquivo %s a partir do offset %d.\n", payload, path, offset);
-	return "Você chamou a função que escreve arquivos";
+/* Generates a random string token */
+void rand_str(char *dest, size_t length) {
+    char charset[] = "0123456789"
+                     "abcdefghijklmnopqrstuvwxyz"
+                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    while (length-- > 0) {
+        size_t index = (double) rand() / RAND_MAX * (sizeof charset - 1);
+        *dest++ = charset[index];
+    }
+    *dest = '\0';
 }
 
-char * fileInfo(char * path){
-	printf("Devo dar informações sobre o arquivo %s.\n", path);
-	return "Você chamou a função que dá informações sobre arquivos";
+/* Handles user logout */
+char * logoutHandler(int userId, char * validationToken){
+	if(validateUser){
+		free(validationTokens[userId]);
+		printf("O usuário %s se deslogou.\n", existingUsers[userId]);
+		return "";
+	}
 }
 
-char * mkdir(char * path, char * dirname){
-	printf("Devo criar um diretório de nome %s em %s.\n", dirname, path);
-	return "Você chamou a função que cria diretórios";
+/* Handles user login */
+char * loginHandler(char * username, char * password){
+	char * buf = (char *) malloc(80 * sizeof(char));
+	for(int i = 0; i < numUsers; i++){
+		if(strcmp(username, existingUsers[i]) == 0){
+			if(atoi(password) == existingPasswords[i]){
+				validationTokens[i] = (char *) malloc(12 * sizeof(char));
+				rand_str(validationTokens[i], 12);
+				sprintf(buf, "login%s%d%s%s", reserved,i,reserved, validationTokens[i]);
+				return buf;
+			}
+		}
+	}
+	return erros("Login ou senha inválidos");
 }
 
-char * rm(char * path, char * dirname){
-	printf("Devo remover o diretório de nome %s em %s.\n", dirname, path);
-	return "Você chamou a função que remove diretórios";
+/* Extrai de um path o nome do arquivo txt */
+char *getName(char *p)
+{
+  int i;
+
+  for(i = strlen(p); p[i] != '/'; i--)
+  {}
+
+  return p + i + 1;
+
+}
+/* Lê uma quantidade de bytes de um arquivo a partir de um offset */
+char * readFile(char * path, int nrbytes, int offset)
+{
+  int fd, param, tam;
+  char payload[BUFSIZE], * str;
+  struct stat path_stat;
+  struct passwd * pw;
+  
+  printf("\n\nOperacao: leitura de %d bytes do arquivo >>%s<< a partir do offset %d.\n", nrbytes, getName(path), offset );
+
+  stat(path, &path_stat);
+
+  if(!S_ISREG(path_stat.st_mode)){
+  	if(S_ISDIR(path_stat.st_mode)){
+  		str = malloc(100);
+  		pw = getpwuid(path_stat.st_uid);
+  		
+      sprintf(str, "O path passado corresponde a um diretório, cujo autor é %s.", pw->pw_name);
+  		return erros(str);
+  	}
+  	else{
+  		return erros("O path passado não contém um arquivo.");
+  	}
+  }
+  
+  fd = open(path, 0, PERALL);// acusa erro caso nao exista
+
+  if(fd == -1)
+  {
+    return erros("Erro no comando 'read', verifique se o arquivo existe.");
+  }
+
+  tam = lseek(fd, 0, SEEK_END);
+
+  if(nrbytes <= tam) // testa se nrbytes eh maior que o arquivo
+    tam = nrbytes;
+
+  lseek(fd, offset, SEEK_SET);
+
+  param = read(fd, payload, tam);
+
+  if(!param)
+  { 
+    close(fd);
+    return erros("Leitura vazia, se for o caso, verifique offset");
+  }
+
+  payload[tam] = '\0';
+
+  close(fd);
+
+  printf("\nString lida:%s\n", payload);
+
+  return readMachinetoHuman(payload,tam);
 }
 
-char * list(char * path){
-	printf("Devo listar todos os arquivos e diretórios em %s.\n", path);
-	return "Você chamou a função que lista arquivos no diretório";
+/* Escreve uma quantidade de bytes de um arquivo a partir de um offset */
+char * writeFile(char * path, char * payload, int nrbytes, int offset, int ownerPerm, int otherPerm)
+{ 
+  int fd;
+
+  printf("\n\nOperacao: escrita da string >>%s<< no arquivo >>%s<< a partir do offset %d.\n", payload, getName(path), offset);
+
+
+  if(nrbytes == 0)
+  {
+    unlink(path);
+    return writeMachinetoHuman("Você chamou a função que escreve em arquivos com nrbytes=0, seu arquivo foi apagado");
+  }
+
+  fd = open(path, O_CREAT|O_RDWR, PERALL);// cria se nao existir e seta a permissao libero geral
+
+  if(fd == -1)
+  {
+      return erros("Erro no comando 'write', parametros inválidos");
+  }
+
+  if(offset <= (lseek(fd, 0, SEEK_END))) // testa se offset eh maior que o arquivo
+    lseek(fd, offset, SEEK_SET);
+
+  write(fd, payload, nrbytes);
+
+
+  close(fd);
+
+  return writeMachinetoHuman("Sua mensagem foi escrita.");
+}
+/* Extrai as informações de um arquivo ou pasta */
+char * fileInfo(char * path)
+{
+  stat(path, &info);
+  struct passwd *pw;
+  struct group * gr;
+  char buf1[BUFSIZE],buf2[BUFSIZE],buf3[BUFSIZE];
+
+  printf("\n\nOperacao: extracao das informacoes sobre o path passado %s.\n", path);
+
+  pw = getpwuid(info.st_uid);
+  gr = getgrgid(info.st_gid);
+
+  if((info.st_mode & S_IFMT) == S_IFDIR)
+  {
+    sprintf(buf1,"Voce esta consultado as informações sobre uma pasta");
+    sprintf(buf2,"Ownwer: %s e Group: %s\n", pw->pw_name, gr->gr_name);
+    sprintf(buf3,"O tamanho depende de seu conteudo, para mais informações use o list");
+    return infoMachinetoHuman(buf1,buf2,buf3);
+  }
+
+  sprintf(buf1,"\nInformações do arquivo: %s\n", getName(path));
+  sprintf(buf2,"Owner: %s e Group: %s \n", pw->pw_name, gr->gr_name);
+  sprintf(buf3,"Tamanho: %ld bytes\n\n", (long) info.st_size);
+
+
+  return infoMachinetoHuman(buf1,buf2,buf3);
 }
 
-//empty string
+/* Cria um subdiretório no path indicado */
+char * makdir(char * path, char * dirname, int ownerPerm, int otherPerm)
+{
+  char mk[BUFSIZE];
+
+  printf("\n\nOperacao: criar um diretório de nome >>%s<< em %s.\n", dirname, path);
+
+  strcpy(mk, path);
+  strcat(mk, "/");
+  strcat(mk, dirname);
+
+  if((mkdir(mk, PERALL)) == -1)
+  {
+    sprintf(mk,"Erro na criacao do diretorio >>%s<<.", dirname);
+    return erros(mk);
+  }
+
+  sprintf(mk,"Diretório criado, novo path: %s.",mk);
+
+  return mkdirMachinetoHuman(mk);
+}
+
+/* Remove um dado diretório */
+char * rm(char * path, char * dirname) 
+{
+  char mk[BUFSIZE];
+
+  strcpy(mk, path);
+  strcat(mk, dirname);
+
+  printf("\n\nOperação: remover o diretório de nome >>%s<< em %s.\n", dirname, path);
+  
+  if( (rmdir(mk)) == -1)
+  {
+    return erros("Erro ao tentar remover o diretório, verifique se o mesmo esta vazio");
+  }
+
+  sprintf(mk,"Diretório removido, novo path: %s.",path);
+
+  return rmMachinetoHuman(mk);
+
+  //return "Você chamou a função que remove diretórios";
+}
+
+/* Lista todos os arquivos e diretórios a partir de um dado path */
+char * list(char * path)
+{
+  DIR* dir; 
+  struct dirent* entrada; 
+  dir = opendir( path );
+  
+  bzero(req,MAX);
+
+  printf("\n\nOperacao: listar todos os arquivos e diretórios em >>%s<<.\n", path); 
+
+  if( !dir )
+  {   
+    return erros("Erro ao tentar listar no path fornecido, verifique."); 
+  }
+
+  strcpy(req,"list");
+  strcat(req,reserved); 
+
+  entrada = readdir( dir); 
+
+  while( entrada)
+  {   
+   
+    if (entrada->d_type == ISFILE)
+    {
+      if(entrada->d_name[0] != '.')
+      {
+        strcat(req,"A");
+        strcat(req,entrada->d_name);
+        strcat(req,reserved);
+      }
+    }
+    else
+      if(entrada->d_type == ISDIR && (strcmp(entrada->d_name, ".")!=0 && strcmp(entrada->d_name, "..") != 0))
+      {
+        strcat(req,"D");
+        strcat(req,entrada->d_name);
+        strcat(req,reserved);
+      }
+
+    entrada = readdir( dir);  
+  }
+
+  printf("\n");
+
+  closedir( dir );
+
+  return req;
+
+  //return "Você chamou a função que lista arquivos no diretório";
+}
 
 /* Routes the message to the appropriate function depending on the base command */
 /* Base command validation is done exclusively client-side (meaning, not here) 
    On the other hand, parameter validation is done exclusively server side (meaning, here)*/ 
-int functionRouter (char *command) {
+
+int functionRouter (char *command) 
+{
 	char * mainCommand, buf[BUFSIZE];
 	char * params[10];
 	int n = 0;
 
 	strcpy(buf, command);
 
-	for (char * p = strtok(buf, "|"); p; p = strtok(NULL, "|"))
+	for (char * p = strtok(buf, reserved); p; p = strtok(NULL, reserved))
 	{
 	    if (p == NULL)
 	    {
@@ -75,33 +392,49 @@ int functionRouter (char *command) {
 	    printf("%s ", params[n-1]);
 	}
 
-	mainCommand = params[0];
+  	mainCommand = params[0];
+
+  	if(strcmp(mainCommand, "login") == 0 && n == 3){
+		strcpy(command, loginHandler(params[1], params[2]));
+		return 0;
+	}
+  	else if(!validateUser(atoi(params[n-2]), params[n-1])){
+		strcpy(command, erros("Erro de validação do usuário."));
+		return -2;
+	}
+
+	currentUser = atoi(params[n-2]);
 	
-	if(strcmp(mainCommand, "read") == 0 && n == 4){
+	if(strcmp(mainCommand, "read") == 0 && n == 6){
 		strcpy(command, readFile(params[1], atoi(params[2]), atoi(params[3])));
 	}
-	else if(strcmp(mainCommand, "write") == 0 && n == 4){
-		strcpy(command, writeFile(params[1], atoi(params[2]), atoi(params[3])));
+	else if(strcmp(mainCommand, "write") == 0 && n == 9){
+		strcpy(command, writeFile(params[1], params[2], atoi(params[3]),atoi(params[4]), atoi(params[5]), atoi(params[6])));
 	}
-	else if(strcmp(mainCommand, "info") == 0 && n == 2){
+	else if(strcmp(mainCommand, "info") == 0 && n == 4){
 		strcpy(command, fileInfo(params[1]));
 	}
-	else if(strcmp(mainCommand, "mkdir") == 0 && n == 3){
-		strcpy(command, mkdir(params[1], params[2]));
+	else if(strcmp(mainCommand, "mkdir") == 0 && n == 7){
+		strcpy(command, makdir(params[1], params[2], atoi(params[3]),atoi(params[4])));
 	}
-	else if(strcmp(mainCommand, "rm") == 0 && n == 3){
+	else if(strcmp(mainCommand, "rm") == 0 && n == 5){
 		strcpy(command, rm(params[1], params[2]));
 	}
-	else if(strcmp(mainCommand, "list") == 0 && n == 2){
+	else if(strcmp(mainCommand, "list") == 0 && n == 4){
 		strcpy(command, list(params[1]));
 	}
+	else if(strcmp(mainCommand, "quit") == 0 && n == 5){
+		strcpy(command, logoutHandler(atoi(params[1]), params[2]));
+	}
 	else{
-		strcpy(command, "Erro nos parâmetros. Por favor, verifique a documentação dos comandos.");
+		strcpy(command,erros("Erro nos parâmetros. Por favor, verifique a documentação dos comandos.")) ;
 		return -1;
 	}
 	return 0;
 }
-int main(int argc, char **argv) {
+
+int main(int argc, char **argv) 
+{
   int sockfd; /* socket */
   int portno; /* port to listen on */
   int clientlen; /* byte size of client's address */
@@ -112,9 +445,14 @@ int main(int argc, char **argv) {
   char *hostaddrp; /* dotted decimal host addr string */
   int optval; /* flag value for setsockopt */
   int n; /* message byte size */
-	
-  char name[BUFSIZE];   // name of the file received from client
-  int cmd;              // cmd received from client
+
+  req= (char*) malloc(MAX);
+
+  if(req==NULL)
+  {
+      printf("\nErro no servidor, verifique.\n");
+      exit(1);
+  }
 
   /* 
    * check command line arguments 
@@ -138,8 +476,7 @@ int main(int argc, char **argv) {
    * Eliminates "ERROR on binding: Address already in use" error. 
    */
   optval = 1;
-  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, 
-  	(const void *)&optval , sizeof(int));
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,(const void *)&optval , sizeof(int));
 
   /*
    * build the server's Internet address
@@ -152,47 +489,48 @@ int main(int argc, char **argv) {
   /* 
    * bind: associate the parent socket with a port 
    */
-  if (bind(sockfd, (struct sockaddr *) &serveraddr, 
-  	sizeof(serveraddr)) < 0) 
+  if (bind(sockfd, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) 
   	error("ERROR on binding");
 
   /* 
    * main loop: wait for a datagram, then echo it
    */
   clientlen = sizeof(clientaddr);
+
   while (1) {
 
 	/*
 	 * recvfrom: receive a UDP datagram from a client
 	 */
   	bzero(buf, BUFSIZE);
-  	n = recvfrom(sockfd, buf, BUFSIZE, 0,
-  		(struct sockaddr *) &clientaddr, &clientlen);
+  	n = recvfrom(sockfd, buf, BUFSIZE, 0,(struct sockaddr *) &clientaddr, &clientlen);
   	if (n < 0)
   		error("ERROR in recvfrom");
 
-  	functionRouter(buf);
+    fflush(stdout);
 
+  	functionRouter(buf);
+    printf("\n%s\n",buf);
+
+    printf("\n");
 	/* 
 	 * gethostbyaddr: determine who sent the datagram
 	 */
-  	hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, 
-  		sizeof(clientaddr.sin_addr.s_addr), AF_INET);
+  	hostp = gethostbyaddr((const char *)&clientaddr.sin_addr.s_addr, sizeof(clientaddr.sin_addr.s_addr), AF_INET);
   	if (hostp == NULL)
   		error("ERROR on gethostbyaddr");
   	hostaddrp = inet_ntoa(clientaddr.sin_addr);
   	if (hostaddrp == NULL)
   		error("ERROR on inet_ntoa\n");
-  	printf("server received datagram from %s (%s)\n", 
-  		hostp->h_name, hostaddrp);
+  	printf("server received datagram from %s (%s)\n",hostp->h_name, hostaddrp);
   	//printf("server received %d/%d bytes: %s\n", strlen(buf), n, buf);
 
 	/* 
 	 * sendto: echo the input back to the client 
 	 */
-  	n = sendto(sockfd, buf, strlen(buf), 0, 
-  		(struct sockaddr *) &clientaddr, clientlen);
+  	n = sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *) &clientaddr, clientlen);
   	if (n < 0) 
   		error("ERROR in sendto");
   }
+
 }
