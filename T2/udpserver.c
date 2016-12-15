@@ -1,7 +1,3 @@
-/* 
- * udpserver.c - A simple UDP echo server 
- * usage: udpserver <port>
- */
 #include <stdio.h>
 #include <stdlib.h> 
 #include <sys/types.h> 
@@ -25,6 +21,7 @@
 #define PERALL 0777
 #define ISDIR   0x4
 #define ISFILE  0x8
+#define MAX 65000 
 
 struct stat info={0};
 
@@ -32,9 +29,64 @@ int numUsers = 6;
 const char * existingUsers[] = {"user1", "user2", "user3", "user4", "user5", "user6"};
 const int existingPasswords[] = {210723987853, 210723987854, 210723987854, 210723987855, 210723987856, 210723987854};
 const char * validationTokens[6];
-
 int currentUser;
 
+const char * reserved = "|";
+char *req;
+
+char *readMachinetoHuman (char *buf, int tam)
+{
+  bzero(req, MAX);
+
+  sprintf(req,"read%s%s%s%i",reserved,buf,reserved,tam); 
+  
+  return req;
+}
+
+char *writeMachinetoHuman (char *buf)
+{
+  bzero(req, MAX); 
+  
+  sprintf(req,"write%s%s",reserved,buf);  
+  
+  return req;
+}
+
+char *infoMachinetoHuman (char *buf1,char *buf2,char *buf3)
+{
+  bzero(req, MAX);
+
+  sprintf(req,"info%s%s%s%s%s%s",reserved,buf1,reserved,buf2,reserved,buf3); 
+   
+  return req;
+}
+
+char *mkdirMachinetoHuman(char *buf)
+{
+  bzero(req, MAX); 
+  
+  sprintf(req,"mkdir%s%s",reserved,buf);  
+  
+  return req;
+}
+
+char *rmMachinetoHuman(char *buf)
+{
+  bzero(req, MAX); 
+  
+  sprintf(req,"rm%s%s",reserved,buf);  
+  
+  return req;
+}
+
+char *erros(char *buf)
+{
+  bzero(req, MAX);
+
+  sprintf(req,"erro%s%s",reserved,buf);  
+
+  return req;
+}
 
 /*
  * error - wrapper for perror
@@ -82,12 +134,12 @@ char * loginHandler(char * username, char * password){
 			if(atoi(password) == existingPasswords[i]){
 				validationTokens[i] = (char *) malloc(12 * sizeof(char));
 				rand_str(validationTokens[i], 12);
-				sprintf(buf, "login|%d|%s", i, validationTokens[i]);
+				sprintf(buf, "login%s%d%s%s", reserved,i,reserved, validationTokens[i]);
 				return buf;
 			}
 		}
 	}
-	return "erro|Login ou senha inválidos";
+	return erros("Login ou senha inválidos");
 }
 
 /* Extrai de um path o nome do arquivo txt */
@@ -104,7 +156,7 @@ char *getName(char *p)
 /* Lê uma quantidade de bytes de um arquivo a partir de um offset */
 char * readFile(char * path, int nrbytes, int offset)
 {
-  int fd, param, tam, type;
+  int fd, param, tam;
   char payload[BUFSIZE], * str;
   struct stat path_stat;
   struct passwd * pw;
@@ -112,15 +164,17 @@ char * readFile(char * path, int nrbytes, int offset)
   printf("\n\nOperacao: leitura de %d bytes do arquivo >>%s<< a partir do offset %d.\n", nrbytes, getName(path), offset );
 
   stat(path, &path_stat);
+
   if(!S_ISREG(path_stat.st_mode)){
   	if(S_ISDIR(path_stat.st_mode)){
   		str = malloc(100);
   		pw = getpwuid(path_stat.st_uid);
-  		sprintf(str, "\nO path passado corresponde a um diretório, cujo autor é %s.\n", pw->pw_name);
-  		return str;
+  		
+      sprintf(str, "O path passado corresponde a um diretório, cujo autor é %s.", pw->pw_name);
+  		return erros(str);
   	}
   	else{
-  		return "\nO path passado não contém um arquivo.\n";
+  		return erros("O path passado não contém um arquivo.");
   	}
   }
   
@@ -128,7 +182,7 @@ char * readFile(char * path, int nrbytes, int offset)
 
   if(fd == -1)
   {
-    return "\nErro no comando 'read', verifique se o arquivo existe.\n";
+    return erros("Erro no comando 'read', verifique se o arquivo existe.");
   }
 
   tam = lseek(fd, 0, SEEK_END);
@@ -140,22 +194,19 @@ char * readFile(char * path, int nrbytes, int offset)
 
   param = read(fd, payload, tam);
 
-  payload[tam] = '\0';
-
   if(!param)
   { 
-    printf("\nLeitura vazia, se for o caso, verifique offset\n");
-    *payload = '\0';
     close(fd);
-    return "Você chamou a função que lê arquivos.";
+    return erros("Leitura vazia, se for o caso, verifique offset");
   }
 
+  payload[tam] = '\0';
 
   close(fd);
 
   printf("\nString lida:%s\n", payload);
 
-  return "Você chamou a função que lê arquivos.";
+  return readMachinetoHuman(payload,tam);
 }
 
 /* Escreve uma quantidade de bytes de um arquivo a partir de um offset */
@@ -169,14 +220,14 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset, int owner
   if(nrbytes == 0)
   {
     unlink(path);
-    return "Você chamou a função que escreve em arquivos com nrbytes=0, seu arquivo foi apagado";
+    return writeMachinetoHuman("Você chamou a função que escreve em arquivos com nrbytes=0, seu arquivo foi apagado");
   }
 
   fd = open(path, O_CREAT|O_RDWR, PERALL);// cria se nao existir e seta a permissao libero geral
 
   if(fd == -1)
   {
-      return "\nErro no comando 'write', parametros inválidos\n";
+      return erros("Erro no comando 'write', parametros inválidos");
   }
 
   if(offset <= (lseek(fd, 0, SEEK_END))) // testa se offset eh maior que o arquivo
@@ -187,15 +238,15 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset, int owner
 
   close(fd);
 
-  return "Você chamou a função que escreve path arquivos";
+  return writeMachinetoHuman("Sua mensagem foi escrita.");
 }
-
 /* Extrai as informações de um arquivo ou pasta */
 char * fileInfo(char * path)
 {
   stat(path, &info);
   struct passwd *pw;
   struct group * gr;
+  char buf1[BUFSIZE],buf2[BUFSIZE],buf3[BUFSIZE];
 
   printf("\n\nOperacao: extracao das informacoes sobre o path passado %s.\n", path);
 
@@ -204,17 +255,18 @@ char * fileInfo(char * path)
 
   if((info.st_mode & S_IFMT) == S_IFDIR)
   {
-    printf("\nVoce esta consultado as informações sobre uma pasta\n");
-    printf("\nOwnwer: %s e Group: %s\n", pw->pw_name, gr->gr_name);
-    return "Você chamou a função que dá informações sobre arquivos";
+    sprintf(buf1,"Voce esta consultado as informações sobre uma pasta");
+    sprintf(buf2,"Ownwer: %s e Group: %s\n", pw->pw_name, gr->gr_name);
+    sprintf(buf3,"O tamanho depende de seu conteudo, para mais informações use o list");
+    return infoMachinetoHuman(buf1,buf2,buf3);
   }
 
-  printf("\nInformações do arquivo: %s\n", getName(path));
-  printf("Owner: %s e Group: %s \n", pw->pw_name, gr->gr_name);
-  printf("Tamanho: %ld bytes\n\n", (long) info.st_size);
+  sprintf(buf1,"\nInformações do arquivo: %s\n", getName(path));
+  sprintf(buf2,"Owner: %s e Group: %s \n", pw->pw_name, gr->gr_name);
+  sprintf(buf3,"Tamanho: %ld bytes\n\n", (long) info.st_size);
 
 
-  return "Você chamou a função que dá informações sobre arquivos";
+  return infoMachinetoHuman(buf1,buf2,buf3);
 }
 
 /* Cria um subdiretório no path indicado */
@@ -222,7 +274,7 @@ char * makdir(char * path, char * dirname, int ownerPerm, int otherPerm)
 {
   char mk[BUFSIZE];
 
-  printf("\n\nOperação: criar um diretório de nome >>%s<< em %s.\n", dirname, path);
+  printf("\n\nOperacao: criar um diretório de nome >>%s<< em %s.\n", dirname, path);
 
   strcpy(mk, path);
   strcat(mk, "/");
@@ -230,14 +282,13 @@ char * makdir(char * path, char * dirname, int ownerPerm, int otherPerm)
 
   if((mkdir(mk, PERALL)) == -1)
   {
-    printf("\nErro na criacao do diretorio >>%s<<, verifique.\n", dirname);
-    return 0;
+    sprintf(mk,"Erro na criacao do diretorio >>%s<<.", dirname);
+    return erros(mk);
   }
 
-  printf("\nDiretório criado.\n");
+  sprintf(mk,"Diretório criado, novo path: %s.",mk);
 
-
-  return "Você chamou a função que cria diretórios";
+  return mkdirMachinetoHuman(mk);
 }
 
 /* Remove um dado diretório */
@@ -252,10 +303,14 @@ char * rm(char * path, char * dirname)
   
   if( (rmdir(mk)) == -1)
   {
-    return "\nErro ao tentar remover o diretório, verifique se o mesmo esta vazio\n";
+    return erros("Erro ao tentar remover o diretório, verifique se o mesmo esta vazio");
   }
 
-  return "Você chamou a função que remove diretórios";
+  sprintf(mk,"Diretório removido, novo path: %s.",path);
+
+  return rmMachinetoHuman(mk);
+
+  //return "Você chamou a função que remove diretórios";
 }
 
 /* Lista todos os arquivos e diretórios a partir de um dado path */
@@ -264,14 +319,18 @@ char * list(char * path)
   DIR* dir; 
   struct dirent* entrada; 
   dir = opendir( path );
+  
+  bzero(req,MAX);
 
   printf("\n\nOperacao: listar todos os arquivos e diretórios em >>%s<<.\n", path); 
 
-
   if( !dir )
   {   
-    return "\nErro ao tentar listar no path fornecido, verifique \n."; 
-  } 
+    return erros("Erro ao tentar listar no path fornecido, verifique."); 
+  }
+
+  strcpy(req,"list");
+  strcat(req,reserved); 
 
   entrada = readdir( dir); 
 
@@ -281,20 +340,30 @@ char * list(char * path)
     if (entrada->d_type == ISFILE)
     {
       if(entrada->d_name[0] != '.')
-        printf("\nA: %s", entrada->d_name);
+      {
+        strcat(req,"A");
+        strcat(req,entrada->d_name);
+        strcat(req,reserved);
+      }
     }
     else
       if(entrada->d_type == ISDIR && (strcmp(entrada->d_name, ".")!=0 && strcmp(entrada->d_name, "..") != 0))
-        printf("\nD: %s", entrada->d_name);
+      {
+        strcat(req,"D");
+        strcat(req,entrada->d_name);
+        strcat(req,reserved);
+      }
 
     entrada = readdir( dir);  
   }
 
   printf("\n");
 
-  closedir( dir );  
+  closedir( dir );
 
-  return "Você chamou a função que lista arquivos no diretório";
+  return req;
+
+  //return "Você chamou a função que lista arquivos no diretório";
 }
 
 /* Routes the message to the appropriate function depending on the base command */
@@ -309,7 +378,7 @@ int functionRouter (char *command)
 
 	strcpy(buf, command);
 
-	for (char * p = strtok(buf, "|"); p; p = strtok(NULL, "|"))
+	for (char * p = strtok(buf, reserved); p; p = strtok(NULL, reserved))
 	{
 	    if (p == NULL)
 	    {
@@ -319,8 +388,6 @@ int functionRouter (char *command)
 	    printf("%s ", params[n-1]);
 	}
 
-
-
   	mainCommand = params[0];
 
   	if(strcmp(mainCommand, "login") == 0 && n == 3){
@@ -328,7 +395,7 @@ int functionRouter (char *command)
 		return 0;
 	}
   	else if(!validateUser(atoi(params[n-2]), params[n-1])){
-		strcpy(command, "Erro de validação do usuário.");
+		strcpy(command, erros("Erro de validação do usuário."));
 		return -2;
 	}
 
@@ -340,7 +407,7 @@ int functionRouter (char *command)
 	else if(strcmp(mainCommand, "write") == 0 && n == 9){
 		strcpy(command, writeFile(params[1], params[2], atoi(params[3]),atoi(params[4]), atoi(params[5]), atoi(params[6])));
 	}
-	else if(strcmp(mainCommand, "info") == 0 && n == 5){
+	else if(strcmp(mainCommand, "info") == 0 && n == 4){
 		strcpy(command, fileInfo(params[1]));
 	}
 	else if(strcmp(mainCommand, "mkdir") == 0 && n == 7){
@@ -349,19 +416,18 @@ int functionRouter (char *command)
 	else if(strcmp(mainCommand, "rm") == 0 && n == 5){
 		strcpy(command, rm(params[1], params[2]));
 	}
-	else if(strcmp(mainCommand, "list") == 0 && n == 5){
+	else if(strcmp(mainCommand, "list") == 0 && n == 4){
 		strcpy(command, list(params[1]));
 	}
 	else if(strcmp(mainCommand, "quit") == 0 && n == 5){
 		strcpy(command, logoutHandler(atoi(params[1]), params[2]));
 	}
 	else{
-		strcpy(command, "Erro nos parâmetros. Por favor, verifique a documentação dos comandos.");
+		strcpy(command,erros("Erro nos parâmetros. Por favor, verifique a documentação dos comandos.")) ;
 		return -1;
 	}
 	return 0;
 }
-
 
 int main(int argc, char **argv) 
 {
@@ -375,6 +441,14 @@ int main(int argc, char **argv)
   char *hostaddrp; /* dotted decimal host addr string */
   int optval; /* flag value for setsockopt */
   int n; /* message byte size */
+
+  req= (char*) malloc(MAX);
+
+  if(req==NULL)
+  {
+      printf("\nErro no servidor, verifique.\n");
+      exit(1);
+  }
 
   /* 
    * check command line arguments 
@@ -454,4 +528,5 @@ int main(int argc, char **argv)
   	if (n < 0) 
   		error("ERROR in sendto");
   }
+
 }
