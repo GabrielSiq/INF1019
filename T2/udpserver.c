@@ -209,23 +209,64 @@ char * readFile(char * path, int nrbytes, int offset)
   return readMachinetoHuman(payload,tam);
 }
 
+char * changePermissions(char * path, int ownerPerm, int otherPerm){
+  struct stat path_stat;
+  int fd;
+  char * base, * basec, * dirc, * dname;
+  char hidden[80], hiddenPath[80], perms[10];
+  char owner[10];
+
+  stat(path, &path_stat);
+
+  if(S_ISREG(path_stat.st_mode) || S_ISDIR(path_stat.st_mode)){
+    
+
+    basec = strdup(path);
+    base = basename(basec);
+    dirc = strdup(path);
+    dname = dirname(dirc);
+
+    sprintf(hidden, ".%s", base);
+    sprintf(hiddenPath, "%s/%s", dname, hidden);
+
+    sprintf(perms, "%d %d %d", currentUser, ownerPerm, otherPerm);
+    chmod(hiddenPath, S_IRUSR|S_IWUSR|S_IWGRP|S_IRGRP|S_IWOTH|S_IROTH);
+    fd = open(hiddenPath, O_RDWR);
+
+    read(fd, owner, 1);
+    if(atoi(owner) != currentUser){
+      return erros("Você não é o dono deste arquivo ou diretório.");
+    }
+    close(fd);
+    fd = open(hiddenPath, O_RDWR);
+    write(fd, perms , sizeof(perms));
+    close(fd);
+    chmod(hiddenPath, S_IRUSR|S_IRGRP|S_IROTH);
+    return "Permissao modificada";
+  }
+  else{
+    return erros("O caminho fornecido não é válido.");
+  }
+}
+
 void createFilePermission(char * path, int ownerPerm, int otherPerm){
 	int fd;
 	char * base, * basec, * dirc, * dname;
-  	char hidden[80], hiddenPath[80], perms[10];
+  char hidden[80], hiddenPath[80], perms[10];
 
-  	basec = strdup(path);
-  	base = basename(basec);
-  	dirc = strdup(path);
-  	dname = dirname(dirc);
+  basec = strdup(path);
+  base = basename(basec);
+  dirc = strdup(path);
+  dname = dirname(dirc);
 
-  	sprintf(hidden, ".%s", base);
+  sprintf(hidden, ".%s", base);
 	sprintf(hiddenPath, "%s/%s", dname, hidden);
 	sprintf(perms, "%d %d %d", currentUser, ownerPerm, otherPerm);
 
 	fd = open(hiddenPath, O_CREAT|O_RDWR, PERALL);
 	write(fd, perms , sizeof(perms));
 	close(fd);
+  chmod(hiddenPath, S_IRUSR|S_IRGRP|S_IROTH);
 }
 
 int checkFilePermission(char * path, char * permFile){
@@ -371,7 +412,7 @@ char * makdir(char * path, char * dirname, int ownerPerm, int otherPerm)
   fd = open(hiddenPath, O_CREAT|O_RDWR, PERALL);
   write(fd, perms, sizeof(perms));
   close(fd);
-
+  chmod(hiddenPath, S_IRUSR|S_IRGRP|S_IROTH);
   sprintf(mk,"Diretório criado, novo path: %s.",mk);
 
   return mkdirMachinetoHuman(mk);
@@ -512,6 +553,9 @@ int functionRouter (char *command)
 	else if(strcmp(mainCommand, "list") == 0 && n == 4){
 		strcpy(command, list(params[1]));
 	}
+  else if(strcmp(mainCommand, "chmod") == 0 && n == 6){
+    strcpy(command, changePermissions(params[1], atoi(params[2]), atoi(params[3])));
+  }
 	else if(strcmp(mainCommand, "quit") == 0 && n == 5){
 		strcpy(command, logoutHandler(atoi(params[1]), params[2]));
 	}

@@ -20,7 +20,7 @@ struct sockaddr_in serveraddr;
 
 
 const char * reserved = "|";
-const char * existingCommands[] = {"read", "write", "info", "mkdir", "rm", "list", NULL};
+const char * existingCommands[] = {"read", "write", "info", "mkdir", "rm", "list", "chmod", NULL};
 
 char validationToken[12]; //session token
 int userId = 1; //user id
@@ -161,6 +161,10 @@ void printHelp(){
 	printf("6- list => lista todos os arquivos e subdiretórios no local indicado.\n");
 	printf("   Esqueleto: list path\n");
 	printf("   Exemplo de uso: list /user/\n\n");
+
+	printf("7- chmod => Muda permissão de um arquivo ou diretório que você é dono.\n");
+	printf("   Esqueleto: chmod path ownerperm otherperm\n");
+	printf("   Exemplo de uso: chmod /user/arquivo.txt 1 1\n\n");
 
 	printf("Viu como é fácil? Agora é sua vez!\n");
 	printf("-------------------//-----------------\n");
