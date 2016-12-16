@@ -198,7 +198,49 @@ void humanReadableToMachine(char * command){
 	if(isLoggedIn == true){
 		sprintf(command, "%s|%d|%s", command, userId, validationToken);
 	}
-	printf("HtM:%s\n", command);
+	//printf("HtM:%s\n", command);
+}
+
+void MachineReadableToHuman(char * buf)
+{
+	char * params[BUFSIZE];
+	int n = 0,tam;
+
+	for (char * p = strtok(buf, reserved); p; p = strtok(NULL, reserved))
+	{
+	    if (p == NULL)
+	    {
+	        break;
+	    }
+
+	    params[n++] = p;
+	    //printf("%s ", params[n-1]);
+	}
+
+  	if(strcmp(params[0], "erro")==0 || strcmp(params[0], "rm") == 0 || strcmp(params[0], "mkdir") == 0 ||strcmp(params[0], "write") == 0 )
+  	{
+  		printf("\n%s\n",params[1]);
+	}
+	else if(strcmp(params[0], "read") == 0 )
+	{
+		printf("\nString lida: %s de tamanho %s ",params[1],params[2]);
+	}
+	else if(strcmp(params[0], "info") == 0)
+	{
+		printf("\n%s\n%s\n%s\n",params[1],params[2],params[3]);
+	}
+	else if(strcmp(params[0], "list") == 0)
+	{
+		for(tam=1;tam < n;tam++)
+		{
+			printf("\n%s.",params[tam]);
+
+		}
+
+		printf("\n\n");
+		
+	}
+	return;
 }
 
 /* Does basic checks on the input, preparing to send to the server */
@@ -287,7 +329,9 @@ int main(int argc, char **argv) {
 		    /* print the server's reply */
 		    receiveMessage(buf);
 
-		  	printf("Server: %s\n", buf);
+		  	MachineReadableToHuman(buf);
+
+		  	//printf("Server: %s\n", buf);
 
 		  	bzero(buf, BUFSIZE); // limpa a mensagem pra nao truncar mensagens anteriores
 		}

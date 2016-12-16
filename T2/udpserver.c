@@ -32,6 +32,7 @@ const char * validationTokens[6];
 int currentUser;
 
 const char * reserved = "|";
+const char *pth_padrao= "./SFS-root-di";
 char *req;
 
 char *readMachinetoHuman (char *buf, int tam)
@@ -121,7 +122,7 @@ void rand_str(char *dest, size_t length) {
 char * logoutHandler(int userId, char * validationToken){
 	if(validateUser){
 		free(validationTokens[userId]);
-		printf("O usuário %s se deslogou.\n", existingUsers[userId]);
+		printf("\nO usuário %s se deslogou.\n", existingUsers[userId]);
 		return "";
 	}
 }
@@ -134,7 +135,7 @@ char * loginHandler(char * username, char * password){
 			if(atoi(password) == existingPasswords[i]){
 				validationTokens[i] = (char *) malloc(12 * sizeof(char));
 				rand_str(validationTokens[i], 12);
-				sprintf(buf, "login%s%d%s%s", reserved,i,reserved, validationTokens[i]);
+				sprintf(buf, "\nlogin%s%d%s%s", reserved,i,reserved, validationTokens[i]);
 				return buf;
 			}
 		}
@@ -160,10 +161,13 @@ char * readFile(char * path, int nrbytes, int offset)
   char payload[BUFSIZE], * str;
   struct stat path_stat;
   struct passwd * pw;
+
+  char temp[BUFSIZE];
+  sprintf(temp,"%s%s",pth_padrao,path);
   
   printf("\n\nOperacao: leitura de %d bytes do arquivo >>%s<< a partir do offset %d.\n", nrbytes, getName(path), offset );
 
-  stat(path, &path_stat);
+  stat(temp, &path_stat);
 
   if(!S_ISREG(path_stat.st_mode)){
   	if(S_ISDIR(path_stat.st_mode)){
@@ -178,7 +182,7 @@ char * readFile(char * path, int nrbytes, int offset)
   	}
   }
   
-  fd = open(path, 0, PERALL);// acusa erro caso nao exista
+  fd = open(temp, 0, PERALL);// acusa erro caso nao exista
 
   if(fd == -1)
   {
@@ -216,14 +220,17 @@ char * changePermissions(char * path, int ownerPerm, int otherPerm){
   char hidden[80], hiddenPath[80], perms[10];
   char owner[10];
 
-  stat(path, &path_stat);
+  char temp[BUFSIZE];
+  sprintf(temp,"%s%s",pth_padrao,path);
+
+  stat(temp, &path_stat);
 
   if(S_ISREG(path_stat.st_mode) || S_ISDIR(path_stat.st_mode)){
     
 
-    basec = strdup(path);
+    basec = strdup(temp);
     base = basename(basec);
-    dirc = strdup(path);
+    dirc = strdup(temp);
     dname = dirname(dirc);
 
     sprintf(hidden, ".%s", base);
@@ -254,9 +261,12 @@ void createFilePermission(char * path, int ownerPerm, int otherPerm){
 	char * base, * basec, * dirc, * dname;
   char hidden[80], hiddenPath[80], perms[10];
 
-  basec = strdup(path);
+  char temp[BUFSIZE];
+  sprintf(temp,"%s%s",pth_padrao,path);
+
+  basec = strdup(temp);
   base = basename(basec);
-  dirc = strdup(path);
+  dirc = strdup(temp);
   dname = dirname(dirc);
 
   sprintf(hidden, ".%s", base);
@@ -274,9 +284,12 @@ int checkFilePermission(char * path, char * permFile){
 	char * base, * basec, * dirc, * dname;
   char hidden[80], hiddenPath[80], buffer[10];
 
-  basec = strdup(path);
+  char temp[BUFSIZE];
+  sprintf(temp,"%s%s",pth_padrao,path);
+
+  basec = strdup(temp);
   base = basename(basec);
-  dirc = strdup(path);
+  dirc = strdup(temp);
   dname = dirname(dirc);
 
   sprintf(hidden, ".%s", base);
@@ -300,8 +313,11 @@ int checkDirPermission(char * path, char * dirname, char * permFile){
 	char hidden[80], hiddenPath[80], buffer[10];
 	int fd;
 
+  char temp[BUFSIZE];
+  sprintf(temp,"%s%s",pth_padrao,path);
+
 	sprintf(hidden, ".%s", dirname);
-  sprintf(hiddenPath, "%s/%s", path, hidden);
+  sprintf(hiddenPath, "%s/%s", temp, hidden);
   	fd = open(hiddenPath, O_CREAT|O_RDWR, PERALL);
   	read(fd, buffer, 1);
 	if(atoi(buffer) != currentUser){
@@ -321,11 +337,12 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset, int owner
 { 
   int fd;
   char permFile[80];
+  sprintf(temp,"%s%s",pth_padrao,path);
   
   printf("\n\nOperacao: escrita da string >>%s<< no arquivo >>%s<< a partir do offset %d.\n", payload, getName(path), offset);
 
 
-  if( access( path, F_OK ) == -1 ) {
+  if( access( temp, F_OK ) == -1 ) {
     createFilePermission(path, ownerPerm, otherPerm);
   }
   else{
@@ -336,7 +353,7 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset, int owner
 
   if(nrbytes == 0)
   {
-    unlink(path);
+    unlink(temp);
     unlink(permFile);
     return writeMachinetoHuman("Você chamou a função que escreve em arquivos com nrbytes=0, seu arquivo foi apagado");
   }
@@ -359,7 +376,11 @@ char * writeFile(char * path, char * payload, int nrbytes, int offset, int owner
 /* Extrai as informações de um arquivo ou pasta */
 char * fileInfo(char * path)
 {
-  stat(path, &info);
+
+  char temp[BUFSIZE];
+  sprintf(temp,"%s%s",pth_padrao,path);
+
+  stat(temp, &info);
   struct passwd *pw;
   struct group * gr;
   char buf1[BUFSIZE],buf2[BUFSIZE],buf3[BUFSIZE];
@@ -394,7 +415,8 @@ char * makdir(char * path, char * dirname, int ownerPerm, int otherPerm)
 
   printf("\n\nOperacao: criar um diretório de nome >>%s<< em %s.\n", dirname, path);
 
-  strcpy(mk, path);
+  strcpy(mk, pth_padrao);
+  strcat(mk, path);
   strcat(mk, "/");
   strcat(mk, dirname);
 
@@ -424,7 +446,8 @@ char * rm(char * path, char * dirname)
   char mk[BUFSIZE];
   char permFile[80];
 
-  strcpy(mk, path);
+  strcpy(mk, pth_padrao);
+  strcat(mk, path);
   strcat(mk, dirname);
 
   printf("\n\nOperação: remover o diretório de nome >>%s<< em %s.\n", dirname, path);
@@ -451,8 +474,11 @@ char * rm(char * path, char * dirname)
 char * list(char * path)
 {
   DIR* dir; 
-  struct dirent* entrada; 
-  dir = opendir( path );
+  struct dirent* entrada;
+  sprintf(temp,"%s%s",pth_padrao,path);
+
+
+  dir = opendir( temp );
   
   bzero(req,MAX);
 
